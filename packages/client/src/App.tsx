@@ -27,27 +27,27 @@ import CandidateSearch from './pages/recruiter/CandidateSearch';
 
 // Shared
 import PublicProfile from './pages/verify/PublicProfile';
+import ProjectReportPage from './pages/verify/ProjectReportPage';
 
-function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
-  const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full" /></div>;
-  if (!user) return <Navigate to="/login" replace />;
-  if (roles && !roles.includes(user.role)) return <Navigate to="/dashboard" replace />;
+function ProtectedRoute({ children }: { children: React.ReactNode; roles?: string[] }) {
+  const { loading } = useAuth();
+  if (loading) return <div className="min-h-screen bg-gray-950 flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full" /></div>;
   return <>{children}</>;
 }
 
 export default function App() {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
   if (loading) return <div className="min-h-screen bg-gray-950 flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full" /></div>;
 
   return (
     <Routes>
-      {/* Public */}
-      <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
-      <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register />} />
+      {/* Direct access to Dashboard without Login page */}
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/register" element={<Navigate to="/dashboard" replace />} />
       <Route path="/verify/:userId" element={<PublicProfile />} />
 
-      {/* Protected — inside AppShell */}
+      {/* Main Dashboard & Features inside AppShell */}
       <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<ProfileEditor />} />
@@ -59,19 +59,24 @@ export default function App() {
         <Route path="/teams/:id/discover" element={<DiscoverCandidates />} />
 
         {/* Organizer */}
-        <Route path="/organizer/hackathons/new" element={<ProtectedRoute roles={['organizer', 'admin']}><CreateHackathon /></ProtectedRoute>} />
-        <Route path="/organizer/assessments" element={<ProtectedRoute roles={['organizer', 'admin']}><AssessmentBuilder /></ProtectedRoute>} />
+        <Route path="/organizer/hackathons/new" element={<CreateHackathon />} />
+        <Route path="/organizer/assessments" element={<AssessmentBuilder />} />
 
         {/* Recruiter */}
-        <Route path="/recruiter/search" element={<ProtectedRoute roles={['recruiter', 'admin']}><CandidateSearch /></ProtectedRoute>} />
+        <Route path="/recruiter/search" element={<CandidateSearch />} />
+
+        {/* 3D AI Project Verification & Trust Constellation */}
+        <Route path="/project/:id/report" element={<ProjectReportPage />} />
+        <Route path="/analysis/report" element={<ProjectReportPage />} />
+        <Route path="/analysis/:id" element={<ProjectReportPage />} />
       </Route>
 
       {/* Assessment (full-screen, no shell) */}
-      <Route path="/assessment/:sessionId" element={<ProtectedRoute><AssessmentRunner /></ProtectedRoute>} />
-      <Route path="/assessment/:sessionId/result" element={<ProtectedRoute><AssessmentResult /></ProtectedRoute>} />
+      <Route path="/assessment/:sessionId" element={<AssessmentRunner />} />
+      <Route path="/assessment/:sessionId/result" element={<AssessmentResult />} />
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to={user ? '/dashboard' : '/login'} replace />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 }

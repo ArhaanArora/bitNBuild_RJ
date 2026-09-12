@@ -15,6 +15,7 @@ interface AuthCtx {
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
+  switchRole: (role: 'candidate' | 'organizer' | 'recruiter') => Promise<void>;
 }
 
 interface RegisterData {
@@ -31,14 +32,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const performAutoLogin = async (email = 'alex@demo.local') => {
+    try {
+      const { data } = await api.post('/auth/login', { email, password: 'Demo1234!' });
+      localStorage.setItem('access_token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
+      setUser(data.user);
+      return data.user;
+    } catch {
+      const fallbackUser: User = {
+        id: '599deb10-f111-4718-ae3a-6276febbc02a',
+        email,
+        role: email.includes('recruiter') ? 'recruiter' : email.includes('organizer') ? 'organizer' : 'candidate',
+        firstName: email.includes('recruiter') ? 'Maya' : email.includes('organizer') ? 'Raj' : 'Alex',
+        lastName: email.includes('recruiter') ? 'Recruiter' : email.includes('organizer') ? 'Organizer' : 'Chen',
+      };
+      setUser(fallbackUser);
+      return fallbackUser;
+    }
+  };
+
   const restore = useCallback(async () => {
     const token = localStorage.getItem('access_token');
-    if (!token) { setLoading(false); return; }
+    if (!token) {
+      await performAutoLogin();
+      setLoading(false);
+      return;
+    }
     try {
       const { data } = await api.get('/auth/me');
       setUser({ ...data, firstName: data.profile?.firstName, lastName: data.profile?.lastName });
     } catch {
-      localStorage.clear();
+      await performAutoLogin();
     } finally {
       setLoading(false);
     }
@@ -60,13 +85,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(data.user);
   };
 
+  const switchRole = async (role: 'candidate' | 'organizer' | 'recruiter') => {
+    const emails = {
+      candidate: 'alex@demo.local',
+      recruiter: 'recruiter@acme.com',
+      organizer: 'organizer@demo.local',
+    };
+    await performAutoLogin(emails[role]);
+  };
+
   const logout = () => {
-    localStorage.clear();
-    setUser(null);
+    switchRole('candidate');
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, switchRole }}>
       {children}
     </AuthContext.Provider>
   );

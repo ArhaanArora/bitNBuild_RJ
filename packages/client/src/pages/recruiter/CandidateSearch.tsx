@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
+import RecruiterCompareScene from '../../scenes/RecruiterCompareScene';
+import AccessibleViewToggle from '../../scenes/AccessibleViewToggle';
 
 export default function CandidateSearch() {
   const [skill, setSkill] = useState('');
@@ -8,6 +10,7 @@ export default function CandidateSearch() {
   const [results, setResults] = useState<any[]>([]);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [is3D, setIs3D] = useState(true);
 
   const search = async () => {
     if (!skill) return;
@@ -15,6 +18,27 @@ export default function CandidateSearch() {
     const { data } = await api.get('/verification/search', { params: { skill, minScore } });
     setResults(data); setSearched(true); setLoading(false);
   };
+
+  const compareCandidates = results.length >= 2 ? [
+    {
+      name: `${results[0].profile?.firstName || 'Candidate A'} ${results[0].profile?.lastName || ''}`,
+      role: results[0].profile?.education || 'Candidate 1',
+      trustScore: results[0].verifiedScore || 85,
+      skillsScore: results[0].verifiedScore || 88,
+      securityScore: results[0].integrityScore || 90,
+      color: '#10B981',
+      position: [-2.6, 0, 0] as [number, number, number],
+    },
+    {
+      name: `${results[1].profile?.firstName || 'Candidate B'} ${results[1].profile?.lastName || ''}`,
+      role: results[1].profile?.education || 'Candidate 2',
+      trustScore: results[1].verifiedScore || 80,
+      skillsScore: results[1].verifiedScore || 82,
+      securityScore: results[1].integrityScore || 85,
+      color: '#6366F1',
+      position: [2.6, 0, 0] as [number, number, number],
+    },
+  ] : undefined;
 
   return (
     <div className="space-y-6 fade-in-up">
@@ -32,8 +56,20 @@ export default function CandidateSearch() {
       </div>
 
       {searched && (
-        <div>
-          <p className="text-sm text-gray-400 mb-3">{results.length} candidate{results.length !== 1 ? 's' : ''} found</p>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-400">{results.length} candidate{results.length !== 1 ? 's' : ''} found</p>
+            {results.length >= 2 && (
+              <AccessibleViewToggle is3D={is3D} onToggle={() => setIs3D(!is3D)} />
+            )}
+          </div>
+
+          {is3D && results.length >= 2 && (
+            <div>
+              <div className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2">3D Candidate Orbit Comparison</div>
+              <RecruiterCompareScene candidates={compareCandidates} />
+            </div>
+          )}
           <div className="space-y-3">
             {results.map(r => (
               <div key={r.userId} className="card-hover flex items-center justify-between">

@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 
 const candidateNav = [
   { to: '/dashboard', icon: '⬡', label: 'Dashboard' },
+  { to: '/analysis/report', icon: '🌌', label: '3D Constellation' },
   { to: '/skills', icon: '✦', label: 'My Skills' },
   { to: '/projects', icon: '◈', label: 'Projects' },
   { to: '/hackathons', icon: '⚡', label: 'Hackathons' },
@@ -11,6 +12,7 @@ const candidateNav = [
 
 const organizerNav = [
   { to: '/dashboard', icon: '⬡', label: 'Dashboard' },
+  { to: '/analysis/report', icon: '🌌', label: '3D Constellation' },
   { to: '/hackathons', icon: '⚡', label: 'Hackathons' },
   { to: '/organizer/hackathons/new', icon: '+', label: 'New Hackathon' },
   { to: '/organizer/assessments', icon: '◈', label: 'Assessments' },
@@ -19,19 +21,18 @@ const organizerNav = [
 
 const recruiterNav = [
   { to: '/dashboard', icon: '⬡', label: 'Dashboard' },
+  { to: '/analysis/report', icon: '🌌', label: '3D Constellation' },
   { to: '/recruiter/search', icon: '◎', label: 'Search Candidates' },
   { to: '/profile', icon: '◉', label: 'Profile' },
 ];
 
 export default function AppShell() {
-  const { user, logout } = useAuth();
+  const { user, switchRole } = useAuth();
   const navigate = useNavigate();
 
   const nav = user?.role === 'organizer' ? organizerNav
     : user?.role === 'recruiter' ? recruiterNav
     : candidateNav;
-
-  const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
     <div className="flex min-h-screen bg-gray-950">
@@ -60,11 +61,32 @@ export default function AppShell() {
           ))}
         </nav>
 
-        {/* Logout */}
-        <div className="px-3 pt-4 border-t border-gray-800 mt-4">
-          <button onClick={handleLogout} className="nav-link w-full text-red-400 hover:text-red-300 hover:bg-red-900/20">
-            <span>⏻</span> Sign out
-          </button>
+        {/* Role Switcher */}
+        <div className="px-3 pt-3 border-t border-gray-800">
+          <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold px-2 mb-1.5">View As Role</p>
+          <div className="grid grid-cols-3 gap-1 bg-gray-950 p-1 rounded-lg border border-gray-800">
+            <button
+              type="button"
+              onClick={() => { switchRole('candidate'); navigate('/dashboard'); }}
+              className={`py-1 text-[11px] rounded font-medium transition ${user?.role === 'candidate' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+              Candidate
+            </button>
+            <button
+              type="button"
+              onClick={() => { switchRole('recruiter'); navigate('/dashboard'); }}
+              className={`py-1 text-[11px] rounded font-medium transition ${user?.role === 'recruiter' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+              Recruiter
+            </button>
+            <button
+              type="button"
+              onClick={() => { switchRole('organizer'); navigate('/dashboard'); }}
+              className={`py-1 text-[11px] rounded font-medium transition ${user?.role === 'organizer' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+              Organizer
+            </button>
+          </div>
         </div>
       </aside>
 

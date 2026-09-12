@@ -13,6 +13,7 @@ import { sessionsRouter } from './sessions/router';
 import { hackathonsRouter } from './hackathons/router';
 import { teamsRouter } from './teams/router';
 import { verificationRouter } from './verification/router';
+import { analysisRouter } from './analysis/router';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -49,6 +50,7 @@ app.use('/api/sessions', sessionsRouter);
 app.use('/api/hackathons', hackathonsRouter);
 app.use('/api/teams', teamsRouter);
 app.use('/api/verification', verificationRouter);
+app.use('/api/analysis', analysisRouter);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date() }));
 

@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
+import VerifyProjectModal from '../verify/VerifyProjectModal';
+import { ShieldCheck, Compass } from 'lucide-react';
 
 interface Project { id: string; name: string; description: string; technologies: string[]; role: string; githubUrl: string; projectUrl: string; skills: { name: string }[]; }
 
@@ -8,6 +11,7 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [allSkills, setAllSkills] = useState<{ id: string; name: string }[]>([]);
   const [adding, setAdding] = useState(false);
+  const [verifyModalOpen, setVerifyModalOpen] = useState(false);
   const [form, setForm] = useState({ name: '', description: '', technologies: '', role: '', githubUrl: '', projectUrl: '', skillIds: [] as string[] });
 
   const load = async () => {
@@ -32,12 +36,22 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6 fade-in-up">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Projects</h1>
-          <p className="text-gray-400 text-sm mt-1">Add project evidence to support your skill claims</p>
+          <p className="text-gray-400 text-sm mt-1">Add project evidence and verify code integrity in 3D</p>
         </div>
-        <button onClick={() => setAdding(true)} className="btn-primary">+ Add Project</button>
+        <div className="flex items-center gap-3">
+          <Link to="/analysis/report" className="btn-ghost text-xs flex items-center gap-1.5 border-gray-700">
+            <Compass className="w-4 h-4 text-indigo-400" />
+            <span>3D Constellation</span>
+          </Link>
+          <button onClick={() => setVerifyModalOpen(true)} className="btn-accent text-xs flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4" />
+            <span>AI Verification</span>
+          </button>
+          <button onClick={() => setAdding(true)} className="btn-primary text-xs">+ Add Project</button>
+        </div>
       </div>
 
       {adding && (
@@ -78,10 +92,23 @@ export default function ProjectsPage() {
                 {p.githubUrl && <a href={p.githubUrl} target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline">GitHub →</a>}
                 {p.projectUrl && <a href={p.projectUrl} target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline">Live →</a>}
               </div>
+              <div className="mt-3 pt-3 border-t border-gray-800 flex items-center justify-between">
+                <Link to="/analysis/report" className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium">
+                  <Compass className="w-3.5 h-3.5" /> 3D Trust Scorecard →
+                </Link>
+                <button onClick={() => setVerifyModalOpen(true)} className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5" /> AI Verify
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
+
+      <VerifyProjectModal
+        isOpen={verifyModalOpen}
+        onClose={() => setVerifyModalOpen(false)}
+      />
     </div>
   );
 }

@@ -1,16 +1,16 @@
 # Dependencies
-/node_modules
-/.pnpm-store
-/.yarn
-/.pnpm
+node_modules/
+.pnpm-store/
+.yarn/
+.pnpm/
 
 # Next.js Build Output
-/.next/
-/out/
-/build
+.next/
+out/
+build/
 
 # Production Output
-/dist
+dist/
 
 # Environment Variables & Secrets (Keep your local secrets out of git!)
 .env

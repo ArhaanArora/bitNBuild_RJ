@@ -222,3 +222,50 @@ export const teamRequests = pgTable('team_requests', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+// ─── Project Verification & Trust Analysis ──────────────────────────────────
+
+export const projectAnalyses = pgTable('project_analyses', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  status: text('status').notNull().default('QUEUED'), // QUEUED, RUNNING, COMPLETED, FAILED
+  overallScore: real('overall_score'),
+  confidence: real('confidence'),
+  verificationCode: text('verification_code').unique(),
+  breakdownJson: jsonb('breakdown_json'),
+  reportJson: jsonb('report_json'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  completedAt: timestamp('completed_at'),
+});
+
+export const analysisAgentRuns = pgTable('analysis_agent_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  analysisId: uuid('analysis_id').notNull().references(() => projectAnalyses.id, { onDelete: 'cascade' }),
+  agentId: text('agent_id').notNull(),
+  agentName: text('agent_name').notNull(),
+  status: text('status').notNull().default('QUEUED'),
+  score: real('score'),
+  weight: real('weight').notNull().default(0),
+  confidence: real('confidence'),
+  summary: text('summary'),
+  durationMs: integer('duration_ms'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const analysisFindings = pgTable('analysis_findings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  analysisId: uuid('analysis_id').notNull().references(() => projectAnalyses.id, { onDelete: 'cascade' }),
+  agentId: text('agent_id').notNull(),
+  category: text('category').notNull(),
+  title: text('title').notNull(),
+  risk: text('risk').notNull().default('INFO'), // CRITICAL, HIGH, MEDIUM, LOW, INFO
+  confidence: real('confidence').notNull().default(80),
+  location: text('location').notNull(),
+  detectionMethod: text('detection_method').notNull(),
+  reasoning: text('reasoning').notNull(),
+  falsePositiveExplanation: text('false_positive_explanation'),
+  recommendation: text('recommendation').notNull(),
+  evidenceSnippet: text('evidence_snippet'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});

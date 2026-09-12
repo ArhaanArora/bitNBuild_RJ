@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
+import SkillLatticeScene, { LatticeSkill } from '../../scenes/SkillLatticeScene';
+import AccessibleViewToggle from '../../scenes/AccessibleViewToggle';
 
 interface Skill { id: string; skillId: string; skillName: string; skillCategory: string; claimedLevel: string; verificationStatus: string; verifiedScore: number | null; }
 interface AvailableSkill { id: string; name: string; category: string; }
@@ -21,6 +23,7 @@ export default function SkillsPage() {
   const [adding, setAdding] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<'beginner' | 'intermediate' | 'advanced' | 'expert'>('intermediate');
+  const [is3D, setIs3D] = useState(true);
 
   const load = async () => {
     const [sk, all, ass] = await Promise.all([api.get('/skills/mine'), api.get('/skills'), api.get('/assessments')]);
@@ -52,6 +55,14 @@ export default function SkillsPage() {
   const unclaimed = allSkills.filter(s => !mySkills.some(ms => ms.skillId === s.id));
   const filtered = search ? unclaimed.filter(s => s.name.toLowerCase().includes(search.toLowerCase())) : unclaimed;
 
+  const latticeSkills: LatticeSkill[] = mySkills.map(s => ({
+    name: s.skillName,
+    category: s.skillCategory,
+    score: s.verifiedScore || 55,
+    confidence: s.verifiedScore ? 95 : 35,
+    status: s.verificationStatus,
+  }));
+
   return (
     <div className="space-y-6 fade-in-up">
       <div className="flex items-center justify-between">
@@ -61,6 +72,23 @@ export default function SkillsPage() {
         </div>
         <button onClick={() => setAdding(true)} className="btn-primary">+ Claim Skill</button>
       </div>
+
+      {/* 3D Skill Lattice vs Flat Toggle */}
+      {mySkills.length > 0 && (
+        <>
+          <div className="flex items-center justify-between bg-gray-900/60 p-3.5 rounded-xl border border-gray-800">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">Topology Visualization</span>
+              <p className="text-xs text-gray-400">Explore your verified competency landscape in 3D spatial elevation</p>
+            </div>
+            <AccessibleViewToggle is3D={is3D} onToggle={() => setIs3D(!is3D)} />
+          </div>
+
+          {is3D && (
+            <SkillLatticeScene skills={latticeSkills} className="shadow-2xl" />
+          )}
+        </>
+      )}
 
       {/* Add skill panel */}
       {adding && (

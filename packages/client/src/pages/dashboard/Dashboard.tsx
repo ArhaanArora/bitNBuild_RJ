@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { useAuth } from '../../hooks/useAuth';
+import VerifyProjectModal from '../verify/VerifyProjectModal';
+import HeroConstellation from '../../scenes/HeroConstellation';
+import { ShieldCheck, Sparkles, ArrowRight, Compass } from 'lucide-react';
 
 interface CandidateSkill { id: string; skillName: string; verificationStatus: string; verifiedScore: number | null; integrityScore: number | null; }
 interface Session { id: string; status: string; technicalScore: number | null; submittedAt: string; }
@@ -29,6 +32,7 @@ export default function Dashboard() {
   const [hackathons, setHackathons] = useState<Hackathon[]>([]);
   const [requests, setRequests] = useState<{ incoming: Request[]; outgoing: Request[] }>({ incoming: [], outgoing: [] });
   const [assessments, setAssessments] = useState<{ id: string; title: string }[]>([]);
+  const [verifyModalOpen, setVerifyModalOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -63,9 +67,59 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 fade-in-up">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-gray-400 text-sm mt-1">Welcome back, {user?.firstName}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+          <p className="text-gray-400 text-sm mt-1">Welcome back, {user?.firstName}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setVerifyModalOpen(true)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span>Verify Project (3D)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 3D AI Project Intelligence Spotlight */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#070b16] via-[#0d1527] to-[#0a1122] border border-indigo-900/50 p-6 md:p-8 shadow-2xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10">
+          <div className="lg:col-span-7 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5" /> 12-Agent Verification & 3D Spatial Intelligence
+            </div>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight leading-tight">
+              AI Project Verification & Trust Constellation
+            </h2>
+            <p className="text-sm text-gray-300 leading-relaxed">
+              Verify any GitHub repository, ZIP archive, or deployed application through our deterministic 12-agent verification pipeline. Inspect code quality, AI-assistance markers, security vulnerabilities, and authorship provenance in an explorable 3D WebGL universe.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setVerifyModalOpen(true)}
+                className="btn-primary flex items-center gap-2 px-5 py-2.5 shadow-lg shadow-indigo-500/25"
+              >
+                <ShieldCheck className="w-4 h-4 text-emerald-300" />
+                <span>Verify Project</span>
+              </button>
+              <Link
+                to="/analysis/report"
+                className="btn-ghost flex items-center gap-2 px-4 py-2.5 border-gray-700 hover:border-indigo-500 text-gray-200"
+              >
+                <Compass className="w-4 h-4 text-indigo-400" />
+                <span>Explore 3D Constellation</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+          <div className="lg:col-span-5 h-[260px] relative rounded-xl overflow-hidden border border-indigo-950/60 shadow-inner">
+            <HeroConstellation className="w-full h-full" />
+          </div>
+        </div>
       </div>
 
       {/* Pending team requests */}
@@ -150,6 +204,11 @@ export default function Dashboard() {
           </Link>
         ))}
       </div>
+
+      <VerifyProjectModal
+        isOpen={verifyModalOpen}
+        onClose={() => setVerifyModalOpen(false)}
+      />
     </div>
   );
 }

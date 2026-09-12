@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE = import.meta.env.VITE_API_URL || '';
+const BASE = (import.meta as any).env?.VITE_API_URL || '';
 
 export const api = axios.create({
   baseURL: `${BASE}/api`,
@@ -21,20 +21,28 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !error.config._retry) {
       error.config._retry = true;
       const refreshToken = localStorage.getItem('refresh_token');
-      if (!refreshToken) {
-        localStorage.clear();
-        window.location.href = '/login';
-        return Promise.reject(error);
+      if (refreshToken) {
+        try {
+          const { data } = await axios.post(`${BASE}/api/auth/refresh`, { refreshToken });
+          localStorage.setItem('access_token', data.access);
+          localStorage.setItem('refresh_token', data.refresh);
+          error.config.headers.Authorization = `Bearer ${data.access}`;
+          return api(error.config);
+        } catch {
+          // fallback to auto-login
+        }
       }
       try {
-        const { data } = await axios.post(`${BASE}/api/auth/refresh`, { refreshToken });
+        const { data } = await axios.post(`${BASE}/api/auth/login`, {
+          email: 'alex@demo.local',
+          password: 'Demo1234!',
+        });
         localStorage.setItem('access_token', data.access);
         localStorage.setItem('refresh_token', data.refresh);
         error.config.headers.Authorization = `Bearer ${data.access}`;
         return api(error.config);
       } catch {
-        localStorage.clear();
-        window.location.href = '/login';
+        return Promise.reject(error);
       }
     }
     return Promise.reject(error);
