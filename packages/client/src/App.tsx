@@ -30,6 +30,7 @@ import CandidateSearch from './pages/recruiter/CandidateSearch';
 import PublicProfile from './pages/verify/PublicProfile';
 import ProjectReportPage from './pages/verify/ProjectReportPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import HiringHub from './pages/hiring/HiringHub';
 
 function ProtectedRoute({ children }: { children: React.ReactNode; roles?: string[] }) {
   const { loading } = useAuth();
@@ -59,6 +60,8 @@ export default function App() {
         <Route path="/hackathons/:id" element={<HackathonDetail />} />
         <Route path="/hackathons/find-teammates" element={<FindTeammatePage />} />
         <Route path="/buddy" element={<FindTeammatePage />} />
+        <Route path="/hiring" element={<HiringHub />} />
+        <Route path="/hiring/*" element={<HiringHub />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/teams/:id" element={<TeamDetail />} />
         <Route path="/teams/:id/discover" element={<DiscoverCandidates />} />

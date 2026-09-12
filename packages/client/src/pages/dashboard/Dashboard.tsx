@@ -5,7 +5,7 @@ import { api } from '../../lib/api';
 import { useAuth } from '../../hooks/useAuth';
 import VerifyProjectModal from '../verify/VerifyProjectModal';
 import HeroConstellation from '../../scenes/HeroConstellation';
-import { ShieldCheck, Sparkles, ArrowRight, Compass, Users } from 'lucide-react';
+import { ShieldCheck, Sparkles, ArrowRight, Compass, Users, Briefcase, Search } from 'lucide-react';
 
 interface CandidateSkill { id: string; skillName: string; verificationStatus: string; verifiedScore: number | null; integrityScore: number | null; }
 interface Session { id: string; status: string; technicalScore: number | null; submittedAt: string; }
@@ -74,6 +74,13 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-3">
           <Link
+            to="/hiring"
+            className="btn-ghost flex items-center gap-2 text-xs border-indigo-700/60 text-indigo-300 hover:border-indigo-500 py-1.5 px-3"
+          >
+            <Briefcase className="w-4 h-4 text-indigo-400" />
+            <span>Hiring</span>
+          </Link>
+          <Link
             to="/hackathons/find-teammates"
             className="btn-accent flex items-center gap-2 text-xs"
           >
@@ -88,6 +95,96 @@ export default function Dashboard() {
             <ShieldCheck className="w-4 h-4" />
             <span>Verify Project (3D)</span>
           </button>
+        </div>
+      </div>
+
+      {/* Primary Marketplace Entry: Hackathon Buddy & Hiring (Section 1) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Hackathon Buddy Card */}
+        <div className="card-hover relative flex flex-col justify-between border border-gray-800 bg-[#0B0F1B]/90 p-6 rounded-2xl transition-all duration-200 shadow-xl">
+          <div>
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shrink-0">
+                  <Users className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-lg leading-tight">
+                    Find Hackathon Buddy
+                  </h3>
+                  <p className="text-xs text-emerald-400 font-medium mt-0.5">
+                    Team Formation & Skill Alignment
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-500/20 font-semibold">
+                Active
+              </span>
+            </div>
+            <p className="text-sm text-gray-300 leading-relaxed mb-4">
+              Assemble your hackathon dream team with people whose skills are backed by assessment scores, portfolio evidence, and GitHub validation.
+            </p>
+          </div>
+
+          <div className="pt-4 border-t border-gray-800/80 flex items-center gap-3">
+            <Link
+              to="/hackathons/find-teammates"
+              className="btn-accent flex-1 text-xs py-2.5 flex items-center justify-center gap-1.5 font-semibold"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Find Teammates</span>
+            </Link>
+            <Link
+              to="/hackathons"
+              className="btn-ghost text-xs py-2.5 px-4 border-gray-700 text-gray-300 hover:text-white"
+            >
+              Browse
+            </Link>
+          </div>
+        </div>
+
+        {/* Hiring Card (Section 1 Exact Spec) */}
+        <div className="card-hover relative flex flex-col justify-between border border-gray-800 bg-[#0B0F1B]/90 p-6 rounded-2xl transition-all duration-200 shadow-xl">
+          <div>
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center text-indigo-400 shrink-0">
+                  <Briefcase className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-lg leading-tight">
+                    Hiring
+                  </h3>
+                  <p className="text-xs text-indigo-400 font-medium mt-0.5">
+                    Verified Talent Marketplace
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-mono text-indigo-400 bg-indigo-950 px-2 py-0.5 rounded border border-indigo-500/20 font-semibold">
+                Verified
+              </span>
+            </div>
+            <p className="text-sm text-gray-300 leading-relaxed mb-4">
+              Find verified talent or put yourself on the hiring radar.
+            </p>
+          </div>
+
+          <div className="pt-4 border-t border-gray-800/80 flex items-center gap-3">
+            <Link
+              to="/hiring?tab=hire"
+              className="btn-primary flex-1 text-xs py-2.5 flex items-center justify-center gap-1.5 font-semibold shadow-md shadow-indigo-600/25"
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span>Hire Someone</span>
+            </Link>
+            <Link
+              to="/hiring?tab=get-hired"
+              className="btn-ghost flex-1 text-xs py-2.5 flex items-center justify-center gap-1.5 border-indigo-700/60 hover:border-indigo-500 text-indigo-300 font-semibold"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Get Hired</span>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -199,8 +296,9 @@ export default function Dashboard() {
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         {[
+          { label: '💼 Hiring & Talent', to: '/hiring', color: 'border-indigo-600 hover:border-indigo-400 bg-indigo-950/20' },
           { label: '🤝 Find Teammate', to: '/hackathons/find-teammates', color: 'border-emerald-600 hover:border-emerald-400 bg-emerald-950/20' },
           { label: 'Claim a skill', to: '/skills', color: 'border-indigo-700 hover:border-indigo-500' },
           { label: 'Add project', to: '/projects', color: 'border-purple-700 hover:border-purple-500' },

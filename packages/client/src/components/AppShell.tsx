@@ -5,6 +5,7 @@ import NotificationBell from './NotificationBell';
 const candidateNav = [
   { to: '/dashboard', icon: '⬡', label: 'Dashboard' },
   { to: '/hackathons/find-teammates', icon: '🤝', label: 'Find Teammates' },
+  { to: '/hiring', icon: '💼', label: 'Hiring' },
   { to: '/analysis/report', icon: '🌌', label: '3D Constellation' },
   { to: '/skills', icon: '✦', label: 'My Skills' },
   { to: '/projects', icon: '◈', label: 'Projects' },
@@ -16,6 +17,7 @@ const candidateNav = [
 const organizerNav = [
   { to: '/dashboard', icon: '⬡', label: 'Dashboard' },
   { to: '/hackathons/find-teammates', icon: '🤝', label: 'Find Teammates' },
+  { to: '/hiring', icon: '💼', label: 'Hiring' },
   { to: '/analysis/report', icon: '🌌', label: '3D Constellation' },
   { to: '/hackathons', icon: '⚡', label: 'Hackathons' },
   { to: '/organizer/hackathons/new', icon: '+', label: 'New Hackathon' },
@@ -26,6 +28,7 @@ const organizerNav = [
 
 const recruiterNav = [
   { to: '/dashboard', icon: '⬡', label: 'Dashboard' },
+  { to: '/hiring', icon: '💼', label: 'Hiring' },
   { to: '/hackathons/find-teammates', icon: '🤝', label: 'Find Teammates' },
   { to: '/analysis/report', icon: '🌌', label: '3D Constellation' },
   { to: '/recruiter/search', icon: '◎', label: 'Search Candidates' },
