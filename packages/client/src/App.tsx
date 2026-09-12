@@ -15,6 +15,7 @@ import AssessmentRunner from './pages/assessment/AssessmentRunner';
 import AssessmentResult from './pages/assessment/AssessmentResult';
 import HackathonList from './pages/hackathon/HackathonList';
 import HackathonDetail from './pages/hackathon/HackathonDetail';
+import FindTeammatePage from './pages/hackathon/FindTeammatePage';
 import TeamDetail from './pages/teams/TeamDetail';
 import DiscoverCandidates from './pages/teams/DiscoverCandidates';
 
@@ -55,6 +56,8 @@ export default function App() {
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/hackathons" element={<HackathonList />} />
         <Route path="/hackathons/:id" element={<HackathonDetail />} />
+        <Route path="/hackathons/find-teammates" element={<FindTeammatePage />} />
+        <Route path="/buddy" element={<FindTeammatePage />} />
         <Route path="/teams/:id" element={<TeamDetail />} />
         <Route path="/teams/:id/discover" element={<DiscoverCandidates />} />
 

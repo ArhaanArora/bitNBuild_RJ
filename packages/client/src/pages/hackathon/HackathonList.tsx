@@ -27,14 +27,19 @@ export default function HackathonList() {
 
   return (
     <div className="space-y-6 fade-in-up">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Hackathons</h1>
-          <p className="text-gray-400 text-sm mt-1">Browse and join hackathons to find your team</p>
+          <p className="text-gray-400 text-sm mt-1">Browse active hackathons and assemble evidence-verified teams</p>
         </div>
-        {(user?.role === 'organizer' || user?.role === 'admin') && (
-          <Link to="/organizer/hackathons/new" className="btn-primary">+ Create</Link>
-        )}
+        <div className="flex items-center gap-3">
+          <Link to="/hackathons/find-teammates" className="btn-accent text-xs flex items-center gap-1.5">
+            <span>🤝 Find Teammates</span>
+          </Link>
+          {(user?.role === 'organizer' || user?.role === 'admin') && (
+            <Link to="/organizer/hackathons/new" className="btn-primary text-xs">+ Create</Link>
+          )}
+        </div>
       </div>
 
       <div className="space-y-4">

@@ -5,7 +5,7 @@ import { api } from '../../lib/api';
 import { useAuth } from '../../hooks/useAuth';
 import VerifyProjectModal from '../verify/VerifyProjectModal';
 import HeroConstellation from '../../scenes/HeroConstellation';
-import { ShieldCheck, Sparkles, ArrowRight, Compass } from 'lucide-react';
+import { ShieldCheck, Sparkles, ArrowRight, Compass, Users } from 'lucide-react';
 
 interface CandidateSkill { id: string; skillName: string; verificationStatus: string; verifiedScore: number | null; integrityScore: number | null; }
 interface Session { id: string; status: string; technicalScore: number | null; submittedAt: string; }
@@ -73,10 +73,17 @@ export default function Dashboard() {
           <p className="text-gray-400 text-sm mt-1">Welcome back, {user?.firstName}</p>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            to="/hackathons/find-teammates"
+            className="btn-accent flex items-center gap-2 text-xs"
+          >
+            <Users className="w-4 h-4" />
+            <span>Find Teammates</span>
+          </Link>
           <button
             type="button"
             onClick={() => setVerifyModalOpen(true)}
-            className="btn-primary flex items-center gap-2"
+            className="btn-primary flex items-center gap-2 text-xs"
           >
             <ShieldCheck className="w-4 h-4" />
             <span>Verify Project (3D)</span>
@@ -192,8 +199,9 @@ export default function Dashboard() {
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[
+          { label: '🤝 Find Teammate', to: '/hackathons/find-teammates', color: 'border-emerald-600 hover:border-emerald-400 bg-emerald-950/20' },
           { label: 'Claim a skill', to: '/skills', color: 'border-indigo-700 hover:border-indigo-500' },
           { label: 'Add project', to: '/projects', color: 'border-purple-700 hover:border-purple-500' },
           { label: 'Browse hackathons', to: '/hackathons', color: 'border-emerald-700 hover:border-emerald-500' },
