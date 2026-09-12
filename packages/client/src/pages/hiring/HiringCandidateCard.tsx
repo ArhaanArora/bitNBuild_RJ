@@ -116,6 +116,27 @@ export default function HiringCandidateCard({
           })}
         </div>
 
+        {/* Verification Summary Banner (Section 14) */}
+        <div className="p-3 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] mb-3.5 space-y-1.5 font-mono text-xs">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-[#6B6B70]">Assessment</span>
+            <span className="text-white font-semibold">Completed (10 Qs)</span>
+          </div>
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-[#6B6B70]">Supporting Evidence</span>
+            <span className="text-[#D4D4D8] text-[10px] text-right truncate max-w-[180px]">
+              {(candidate.supportingEvidence || ['Resume', 'Assessment', 'Rough Work']).join(', ')}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-[#6B6B70]">Integrity Rating</span>
+            <span className="text-[#3FB65F] font-semibold flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3" />
+              {candidate.integrityRating || 'Low Concern'}
+            </span>
+          </div>
+        </div>
+
         {/* Triad Proof Signals */}
         <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] mb-4 text-center">
           <div>

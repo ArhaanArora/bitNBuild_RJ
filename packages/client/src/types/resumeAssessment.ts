@@ -14,6 +14,7 @@ export interface AssessmentQuestion {
   question: string;
   type: 'objective' | 'subjective';
   options?: string[]; // length 4 if objective
+  correctAnswer?: string; // stored/revealed for local-first grading
   skill: string;
   difficulty: 'easy' | 'medium' | 'hard';
 }
@@ -36,6 +37,72 @@ export interface SubmittedAnswer {
   answer: string;
 }
 
+export interface QuestionTelemetry {
+  questionId: string;
+  timeDisplayedMs: number;
+  timeAnsweredMs: number;
+  durationMs: number;
+}
+
+export interface CameraCheckRecord {
+  triggeredAt: string;
+  status: 'completed' | 'dismissed' | 'not_available' | 'timed_out';
+  durationSeconds: number;
+}
+
+export interface RoughWorkEvidence {
+  provided: boolean;
+  imageUrl?: string;
+  fileName?: string;
+  fileSizeBytes?: number;
+  uploadedAt?: string;
+}
+
+export interface RapidFireQuestion {
+  id: string;
+  prompt: string;
+  relatedSkill: string;
+  contextType: 'edge_case' | 'trade_off' | 'reasoning' | 'consequence';
+  options: string[];
+  correctOptionIndex: number;
+}
+
+export interface RapidFireAnswer {
+  questionId: string;
+  selectedOptionIndex?: number;
+  selectedText?: string;
+  durationMs: number;
+  skipped: boolean;
+  correct: boolean;
+}
+
+export interface MultiSignalEvaluation {
+  answerAccuracy: number; // 0 - 100
+  responseConsistency: 'Strong' | 'Moderate' | 'Review Recommended';
+  assessmentSpeed: 'Fast' | 'Consistent' | 'Deliberate';
+  rapidFirePerformance: 'Strong' | 'Moderate' | 'Limited';
+  integritySignals: 'Low Concern' | 'Moderate Concern' | 'Review Recommended';
+  supportingEvidence: 'Provided' | 'Not Provided';
+  compositeCredibilityScore: number; // 0 - 100
+  verificationLevel: 'Strong Evidence' | 'Moderate Evidence' | 'Limited Evidence';
+  verifiedSkills: Array<{
+    name: string;
+    score: number;
+    status: 'VERIFIED' | 'CLAIMED';
+    evidence: string;
+  }>;
+  integrityDetails: {
+    totalDurationSeconds: number;
+    avgResponseTimeSeconds: number;
+    tabSwitches: number;
+    fullscreenExits: number;
+    cameraCheckStatus: string;
+    roughWorkProvided: boolean;
+    rapidFireCompleted: string;
+    flags: string[];
+  };
+}
+
 export interface QuestionResult {
   questionId: string;
   question?: string;
@@ -46,6 +113,7 @@ export interface QuestionResult {
   correct?: boolean;
   score?: number; // 0-100
   rationale?: string;
+  durationMs?: number;
 }
 
 export interface EvaluationResult {
@@ -54,4 +122,12 @@ export interface EvaluationResult {
   questionResults: QuestionResult[];
   verificationLevel: 'Strong Evidence' | 'Moderate Evidence' | 'Limited Evidence' | 'Insufficient Evidence';
   integrityEventsCount: number;
+  multiSignal?: MultiSignalEvaluation;
+  roughWork?: RoughWorkEvidence;
+  telemetrySummary?: {
+    totalDurationSeconds: number;
+    avgResponseTimeSeconds: number;
+    fastestResponseSeconds: number;
+    slowestResponseSeconds: number;
+  };
 }

@@ -86,6 +86,8 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
 
   // Recruiter Discoverability Toggle
   const [discoverability, setDiscoverability] = useState(true);
+  const [credibilityScore, setCredibilityScore] = useState<number>(91);
+  const [integrityRating, setIntegrityRating] = useState<string>('Low Concern');
 
   // 1. Load initial profile and verified skills
   useEffect(() => {
@@ -95,6 +97,8 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
       setSkills(saved.skills);
       setUploadedResumeMeta(saved.resume);
       setDiscoverability(saved.recruiterVisibility);
+      if (saved.credibilityScore) setCredibilityScore(saved.credibilityScore);
+      if (saved.integrityRating) setIntegrityRating(saved.integrityRating);
       setViewMode('profile');
       return;
     }
@@ -392,12 +396,15 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
               <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Verified Skills</div>
             </div>
             <div>
-              <div className="text-xl font-bold font-mono text-[#E8672E]">Active</div>
-              <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Radar Status</div>
+              <div className="text-xl font-bold font-mono text-[#E8672E]">{credibilityScore}%</div>
+              <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Credibility Score</div>
             </div>
             <div>
-              <div className="text-xl font-bold font-mono text-[#A3A3A8]">100%</div>
-              <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Evidence Credibility</div>
+              <div className="text-sm font-bold font-mono text-[#3FB65F] flex items-center justify-center gap-1 mt-1">
+                <Shield className="w-3.5 h-3.5 text-[#3FB65F]" />
+                <span>{integrityRating}</span>
+              </div>
+              <div className="text-[10px] text-[#6B6B70] uppercase font-medium mt-1">Integrity Signals</div>
             </div>
           </div>
 

@@ -62,6 +62,9 @@ export interface HiringCandidate {
     uploadedAt?: string;
   };
   isCurrentUser?: boolean; // For when the current user opts into Get Hired
+  integrityRating?: 'Low Concern' | 'Moderate Concern' | 'Review Recommended';
+  supportingEvidence?: string[];
+  roughWorkUrl?: string;
 }
 
 export interface HiringRequirement {
@@ -92,4 +95,8 @@ export interface UserHiringProfile {
   recruiterVisibility: boolean; // 🟢 ON or ⚪ OFF
   activated: boolean;
   updatedAt: string;
+  credibilityScore?: number;
+  integrityRating?: 'Low Concern' | 'Moderate Concern' | 'Review Recommended';
+  supportingEvidence?: string[];
+  roughWorkUrl?: string;
 }

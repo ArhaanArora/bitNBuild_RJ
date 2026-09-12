@@ -102,21 +102,48 @@ export default function HiringCandidateProfileModal({
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-[#2A2A2E] text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-[#2A2A2E] text-xs">
               <div>
-                <span className="text-[10px] text-[#6B6B70] uppercase font-mono block">Proctored Assessment</span>
+                <span className="text-[10px] text-[#6B6B70] uppercase font-mono block">Assessment</span>
                 <span className="font-bold text-[#F5F5F4] text-sm">{candidate.assessmentScore}% Benchmark</span>
               </div>
               <div>
                 <span className="text-[10px] text-[#6B6B70] uppercase font-mono block">Verified Projects</span>
-                <span className="font-bold text-[#3FB65F] text-sm">{candidate.verifiedProjectsCount} Audited Codebases</span>
+                <span className="font-bold text-[#3FB65F] text-sm">{candidate.verifiedProjectsCount} Codebases</span>
               </div>
               <div>
-                <span className="text-[10px] text-[#6B6B70] uppercase font-mono block">GitHub Provenance</span>
-                <span className="font-bold text-[#F5F5F4] text-sm">{candidate.githubEvidence}</span>
+                <span className="text-[10px] text-[#6B6B70] uppercase font-mono block">Integrity Rating</span>
+                <span className="font-bold text-[#3FB65F] text-sm flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#3FB65F]" />
+                  {candidate.integrityRating || 'Low Concern'}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-[#6B6B70] uppercase font-mono block">Supporting Evidence</span>
+                <span className="font-bold text-[#F5F5F4] text-xs truncate block mt-0.5">
+                  {(candidate.supportingEvidence || ['Resume', 'Assessment', 'Rough Work']).join(', ')}
+                </span>
               </div>
             </div>
           </div>
+
+          {candidate.roughWorkUrl && (
+            <div className="p-3.5 rounded-xl bg-[#1E1E22] border border-[#2A2A2E] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <FileText className="w-4 h-4 text-[#E8672E]" />
+                <span className="text-xs text-white font-medium">Candidate Rough Work Photo Attached</span>
+              </div>
+              <a
+                href={candidate.roughWorkUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-[#E8672E] hover:underline flex items-center gap-1 font-mono"
+              >
+                <span>View Image</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          )}
 
           {/* Professional Overview */}
           <div>
