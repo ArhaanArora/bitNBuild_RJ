@@ -30,41 +30,51 @@ function signTokens(payload: { id: string; email: string; role: string }) {
 
 // POST /api/auth/register
 authRouter.post('/register', async (req, res) => {
-  const parsed = registerSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  try {
+    const parsed = registerSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
-  const { email, password, firstName, lastName, role } = parsed.data;
+    const { email, password, firstName, lastName, role } = parsed.data;
 
-  const existing = await db.query.users.findFirst({ where: eq(users.email, email) });
-  if (existing) return res.status(409).json({ error: 'Email already registered' });
+    const existing = await db.query.users.findFirst({ where: eq(users.email, email) });
+    if (existing) return res.status(409).json({ error: 'Email already registered' });
 
-  const passwordHash = await bcrypt.hash(password, 12);
-  const [user] = await db.insert(users).values({ email, passwordHash, role }).returning();
-  await db.insert(profiles).values({ userId: user.id, firstName, lastName });
+    const passwordHash = await bcrypt.hash(password, 12);
+    const [user] = await db.insert(users).values({ email, passwordHash, role }).returning();
+    await db.insert(profiles).values({ userId: user.id, firstName, lastName });
 
-  const tokens = signTokens({ id: user.id, email: user.email, role: user.role });
-  res.status(201).json({ user: { id: user.id, email, role, firstName, lastName }, ...tokens });
+    const tokens = signTokens({ id: user.id, email: user.email, role: user.role });
+    res.status(201).json({ user: { id: user.id, email, role, firstName, lastName }, ...tokens });
+  } catch (err: any) {
+    console.error('Registration error:', err);
+    res.status(500).json({ error: 'Server error during registration: ' + (err.message || 'Unknown error') });
+  }
 });
 
 // POST /api/auth/login
 authRouter.post('/login', async (req, res) => {
-  const parsed = loginSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  try {
+    const parsed = loginSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
-  const { email, password } = parsed.data;
-  const user = await db.query.users.findFirst({ where: eq(users.email, email) });
-  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    const { email, password } = parsed.data;
+    const user = await db.query.users.findFirst({ where: eq(users.email, email) });
+    if (!user) return res.status(401).json({ error: 'Invalid credentials. User does not exist.' });
 
-  const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) return res.status(401).json({ error: 'Invalid password. Please check your password.' });
 
-  const profile = await db.query.profiles.findFirst({ where: eq(profiles.userId, user.id) });
-  const tokens = signTokens({ id: user.id, email: user.email, role: user.role });
+    const profile = await db.query.profiles.findFirst({ where: eq(profiles.userId, user.id) });
+    const tokens = signTokens({ id: user.id, email: user.email, role: user.role });
 
-  res.json({
-    user: { id: user.id, email: user.email, role: user.role, firstName: profile?.firstName, lastName: profile?.lastName },
-    ...tokens,
-  });
+    res.json({
+      user: { id: user.id, email: user.email, role: user.role, firstName: profile?.firstName, lastName: profile?.lastName },
+      ...tokens,
+    });
+  } catch (err: any) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Server error during login: ' + (err.message || 'Unknown error') });
+  }
 });
 
 // POST /api/auth/refresh

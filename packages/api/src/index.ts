@@ -17,9 +17,23 @@ import { verificationRouter } from './verification/router';
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173', credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
+
+// Request logger
+app.use((req, _res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 // Serve uploaded files
 const uploadDir = process.env.UPLOAD_DIR || './uploads';
@@ -37,6 +51,12 @@ app.use('/api/teams', teamsRouter);
 app.use('/api/verification', verificationRouter);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date() }));
+
+// Global error handler
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('Unhandled server error:', err);
+  res.status(500).json({ error: err.message || 'Internal Server Error' });
+});
 
 app.listen(PORT, () => {
   console.log(`🚀 API running on http://localhost:${PORT}`);

@@ -49,6 +49,10 @@ async function seed() {
     email: 'recruiter@demo.local', passwordHash: hash('Demo1234!'), role: 'recruiter',
   }).returning();
 
+  const [recruiterAcme] = await db.insert(users).values({
+    email: 'recruiter@acme.com', passwordHash: hash('Demo1234!'), role: 'recruiter',
+  }).returning();
+
   console.log('✓ Users inserted');
 
   // ─── Profiles ─────────────────────────────────────────────────────────────
@@ -73,6 +77,10 @@ async function seed() {
     {
       userId: recruiter.id, firstName: 'Maya', lastName: 'Recruiter',
       bio: 'Talent scout at TechCorp.',
+    },
+    {
+      userId: recruiterAcme.id, firstName: 'Acme', lastName: 'Recruiter',
+      bio: 'Talent recruiter at Acme Corp.',
     },
   ]);
   console.log('✓ Profiles inserted');

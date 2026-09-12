@@ -16,15 +16,32 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const { register, handleSubmit, formState: { errors } } = useForm<Form>({ resolver: zodResolver(schema) });
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<Form>({ resolver: zodResolver(schema) });
+
+  const fillCredentials = (email: string, pass: string = 'Demo1234!') => {
+    setValue('email', email, { shouldValidate: true });
+    setValue('password', pass, { shouldValidate: true });
+    toast.success(`Filled demo credentials for ${email}`);
+  };
 
   const onSubmit = async (data: Form) => {
     setLoading(true);
     try {
       await login(data.email, data.password);
+      toast.success('Signed in successfully!');
       navigate('/dashboard');
     } catch (err: any) {
-      toast.error(err.response?.data?.error ?? 'Login failed');
+      console.error('Login error:', err);
+      const serverMsg = err.response?.data?.error;
+      if (typeof serverMsg === 'string') {
+        toast.error(serverMsg);
+      } else if (serverMsg && typeof serverMsg === 'object') {
+        toast.error(JSON.stringify(serverMsg));
+      } else if (err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
+        toast.error('Network Error: Cannot reach API server. Please ensure backend is running.');
+      } else {
+        toast.error('Login failed. Please check your credentials or click a demo account below.');
+      }
     } finally {
       setLoading(false);
     }
@@ -57,13 +74,44 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Demo credentials hint */}
+          {/* Demo credentials hint with 1-click autofill */}
           <div className="mt-5 p-3 bg-gray-900 rounded-lg border border-gray-700">
-            <p className="text-xs text-gray-500 mb-2 font-medium">Demo accounts:</p>
-            <div className="space-y-1 text-xs text-gray-400 font-mono">
-              <p>alex@demo.local · Demo1234! <span className="text-indigo-400">(candidate)</span></p>
-              <p>organizer@demo.local · Demo1234! <span className="text-emerald-400">(organizer)</span></p>
-              <p>recruiter@demo.local · Demo1234! <span className="text-amber-400">(recruiter)</span></p>
+            <p className="text-xs text-gray-400 mb-2 font-medium flex items-center justify-between">
+              <span>⚡ Click to auto-fill demo credentials:</span>
+            </p>
+            <div className="space-y-2 text-xs font-mono">
+              <button
+                type="button"
+                onClick={() => fillCredentials('alex@demo.local')}
+                className="w-full text-left p-2 rounded bg-gray-800 hover:bg-gray-700 transition flex justify-between items-center text-gray-300 border border-gray-700/50"
+              >
+                <span>alex@demo.local · Demo1234!</span>
+                <span className="text-indigo-400 font-semibold text-[11px] bg-indigo-950 px-2 py-0.5 rounded">Candidate</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => fillCredentials('organizer@demo.local')}
+                className="w-full text-left p-2 rounded bg-gray-800 hover:bg-gray-700 transition flex justify-between items-center text-gray-300 border border-gray-700/50"
+              >
+                <span>organizer@demo.local · Demo1234!</span>
+                <span className="text-emerald-400 font-semibold text-[11px] bg-emerald-950 px-2 py-0.5 rounded">Organizer</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => fillCredentials('recruiter@acme.com')}
+                className="w-full text-left p-2 rounded bg-gray-800 hover:bg-gray-700 transition flex justify-between items-center text-gray-300 border border-gray-700/50"
+              >
+                <span>recruiter@acme.com · Demo1234!</span>
+                <span className="text-amber-400 font-semibold text-[11px] bg-amber-950 px-2 py-0.5 rounded">Recruiter</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => fillCredentials('recruiter@demo.local')}
+                className="w-full text-left p-2 rounded bg-gray-800 hover:bg-gray-700 transition flex justify-between items-center text-gray-300 border border-gray-700/50"
+              >
+                <span>recruiter@demo.local · Demo1234!</span>
+                <span className="text-amber-400 font-semibold text-[11px] bg-amber-950 px-2 py-0.5 rounded">Recruiter (Demo)</span>
+              </button>
             </div>
           </div>
         </div>
