@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { HiringSkill, UserHiringProfile } from '../../types/hiring';
+import { ResumeAnalysis } from '../../types/resumeAssessment';
 import {
   getUserHiringProfile,
   saveUserHiringProfile,
@@ -19,6 +21,12 @@ import {
   EyeOff,
   ArrowRight,
   FileCheck2,
+  Sparkles,
+  Shield,
+  Camera,
+  Clock,
+  Check,
+  Award,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -46,52 +54,70 @@ const COMMON_SKILL_OPTIONS = [
 
 export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Mode: 'profile' (if activated) | 'upload' | 'analyzing' | 'instructions' | 'manual_form'
+  const [viewMode, setViewMode] = useState<
+    'profile' | 'upload' | 'analyzing' | 'instructions' | 'manual_form'
+  >('upload');
   const [isActivated, setIsActivated] = useState(false);
 
-  // Form State
+  // Form State (Manual / Fallback)
   const [skills, setSkills] = useState<HiringSkill[]>([]);
   const [newSkillName, setNewSkillName] = useState('');
-  const [newProficiency, setNewProficiency] = useState<'Beginner' | 'Intermediate' | 'Advanced'>('Advanced');
+  const [newProficiency, setNewProficiency] = useState<'Beginner' | 'Intermediate' | 'Advanced'>(
+    'Advanced'
+  );
 
   // Resume Upload State
-  const [resumeFile, setResumeFile] = useState<{
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadedResumeMeta, setUploadedResumeMeta] = useState<{
     name: string;
     size: number;
     lastModified: number;
   } | null>(null);
   const [resumeError, setResumeError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
 
-  // Discoverability Toggle
+  // Analysis & Assessment State
+  const [analysisStep, setAnalysisStep] = useState(1);
+  const [analysisResult, setAnalysisResult] = useState<ResumeAnalysis | null>(null);
+  const [assessmentId, setAssessmentId] = useState<string | null>(null);
+  const [agreedToProctoring, setAgreedToProctoring] = useState(false);
+
+  // Recruiter Discoverability Toggle
   const [discoverability, setDiscoverability] = useState(true);
 
+  // 1. Load initial profile and verified skills
   useEffect(() => {
     const saved = getUserHiringProfile();
     if (saved && saved.activated) {
       setIsActivated(true);
       setSkills(saved.skills);
-      setResumeFile(saved.resume);
+      setUploadedResumeMeta(saved.resume);
       setDiscoverability(saved.recruiterVisibility);
+      setViewMode('profile');
       return;
     }
 
     const loadPlatformSkills = async () => {
       try {
-        const res = await api.get('/skills/mine').catch(() => ({ data: [] }));
-        if (res.data && res.data.length > 0) {
-          const preloaded: HiringSkill[] = res.data.map((s: any) => ({
-            name: s.skillName,
-            status: s.verificationStatus === 'VERIFIED' ? 'VERIFIED' : 'CLAIMED',
-            score: s.verifiedScore || 92,
+        const userId = user?.id || 'demo-candidate-1';
+        const res = await api
+          .get(`/hiring/profile/${userId}/verified-skills`)
+          .catch(() => ({ data: null }));
+
+        if (res.data && res.data.skills && res.data.skills.length > 0) {
+          const loaded: HiringSkill[] = res.data.skills.map((s: any) => ({
+            name: s.name,
+            status: s.status,
+            score: s.score,
             selfDeclaredProficiency: 'Advanced',
-            evidenceSummary: s.verificationStatus === 'VERIFIED'
-              ? 'Platform benchmark verified via proctored assessment.'
-              : 'Claimed by candidate; pending platform proctored exam.',
+            evidenceSummary: s.evidence,
           }));
-          setSkills(preloaded);
+          setSkills(loaded);
         } else {
           setSkills([
-            { name: 'Python', status: 'VERIFIED', score: 95, selfDeclaredProficiency: 'Advanced' },
+            { name: 'Python', status: 'VERIFIED', score: 94, selfDeclaredProficiency: 'Advanced' },
             { name: 'React', status: 'VERIFIED', score: 91, selfDeclaredProficiency: 'Advanced' },
             { name: 'SQL', status: 'CLAIMED', score: 80, selfDeclaredProficiency: 'Intermediate' },
           ]);
@@ -104,8 +130,104 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
       }
     };
     loadPlatformSkills();
-  }, []);
+  }, [user]);
 
+  // Handle Resume File Selection (Strict PDF, max 5MB)
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setResumeError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Strict PDF validation
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    if (!isPdf) {
+      setResumeError('Invalid file format. Please upload a PDF file (.pdf).');
+      toast.error('Only PDF documents are accepted.');
+      return;
+    }
+
+    // 5MB Limit
+    const maxSizeBytes = 5 * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      setResumeError('File size exceeds the 5MB maximum limit.');
+      toast.error('PDF exceeds 5MB size limit.');
+      return;
+    }
+
+    setSelectedFile(file);
+    setUploadedResumeMeta({
+      name: file.name,
+      size: file.size,
+      lastModified: file.lastModified,
+    });
+    toast.success(`Selected ${file.name}`);
+  };
+
+  // Start AI Resume Analysis
+  const handleStartAnalysis = async () => {
+    if (!selectedFile) {
+      toast.error('Please select a PDF resume to analyze.');
+      return;
+    }
+
+    setViewMode('analyzing');
+    setAnalysisStep(1);
+
+    try {
+      // Step 1: Multipart upload
+      const formData = new FormData();
+      formData.append('resume', selectedFile);
+
+      const uploadRes = await api.post('/hiring/get-verified/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const resumeId = uploadRes.data?.resumeId;
+      if (!resumeId) {
+        throw new Error('Upload did not return a valid resume ID.');
+      }
+
+      setAnalysisStep(2);
+
+      // Step 2: Trigger AI analysis & assessment generation
+      const userId = user?.id || 'demo-candidate-1';
+      const analyzeRes = await api.post('/hiring/get-verified/analyze', {
+        resumeId,
+        userId,
+      });
+
+      setAnalysisStep(3);
+
+      setTimeout(() => {
+        setAnalysisResult(analyzeRes.data?.analysis || null);
+        setAssessmentId(analyzeRes.data?.assessmentId || null);
+        setViewMode('instructions');
+        toast.success('Assessment generated successfully!');
+      }, 600);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to analyze resume. Please try again.');
+      setViewMode('upload');
+    }
+  };
+
+  // Start the Strict Assessment
+  const handleLaunchAssessment = async () => {
+    if (!assessmentId) return;
+    if (!agreedToProctoring) {
+      toast.error('Please acknowledge the proctoring conditions to begin.');
+      return;
+    }
+
+    try {
+      if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+        await document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } catch {}
+
+    navigate(`/hiring/assessment/${assessmentId}`);
+  };
+
+  // Manual Skill Addition
   const handleAddSkill = (nameToAdd?: string) => {
     const sName = (nameToAdd || newSkillName).trim();
     if (!sName) return;
@@ -115,18 +237,12 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
       return;
     }
 
-    const isPlatformVerified = ['python', 'react', 'typescript', 'figma', 'node.js'].includes(
-      sName.toLowerCase()
-    );
-
     const newSkill: HiringSkill = {
       name: sName,
-      status: isPlatformVerified ? 'VERIFIED' : 'CLAIMED',
-      score: isPlatformVerified ? 92 : undefined,
+      status: 'CLAIMED',
+      score: undefined,
       selfDeclaredProficiency: newProficiency,
-      evidenceSummary: isPlatformVerified
-        ? 'Verified by platform proctored benchmark.'
-        : 'Self-declared by candidate; awaiting platform verification.',
+      evidenceSummary: 'Self-declared by candidate; take the assessment to verify.',
     };
 
     setSkills([...skills, newSkill]);
@@ -138,58 +254,17 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
     setSkills(skills.filter((s) => s.name !== skillName));
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setResumeError(null);
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const validTypes = [
-      'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/msword',
-    ];
-    const isPdfDocx =
-      validTypes.includes(file.type) ||
-      file.name.endsWith('.pdf') ||
-      file.name.endsWith('.docx') ||
-      file.name.endsWith('.doc');
-
-    if (!isPdfDocx) {
-      setResumeError('Invalid file type. Only PDF or DOCX files are supported.');
-      toast.error('Only PDF or DOCX files are allowed.');
-      return;
-    }
-
-    const maxSizeBytes = 5 * 1024 * 1024;
-    if (file.size > maxSizeBytes) {
-      setResumeError(`File size exceeds the 5MB maximum limit.`);
-      toast.error('File exceeds 5MB size limit.');
-      return;
-    }
-
-    setUploading(true);
-    setTimeout(() => {
-      setUploading(false);
-      setResumeFile({
-        name: file.name,
-        size: file.size,
-        lastModified: file.lastModified,
-      });
-      toast.success(`Uploaded ${file.name}`);
-    }, 300);
-  };
-
-  const handleSubmitProfile = (e: React.FormEvent) => {
+  // Save profile manually
+  const handleSubmitManualProfile = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (skills.length === 0) {
-      toast.error('Please include at least one skill in your profile.');
+      toast.error('Please include at least one skill.');
       return;
     }
 
     const profile: UserHiringProfile = {
       skills,
-      resume: resumeFile || {
+      resume: uploadedResumeMeta || {
         name: `${user?.firstName || 'Candidate'}_Resume.pdf`,
         size: 1420000,
         lastModified: Date.now(),
@@ -202,7 +277,8 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
     saveUserHiringProfile(profile);
     setIsActivated(true);
     setDiscoverability(true);
-    toast.success("You're now visible to recruiters!");
+    setViewMode('profile');
+    toast.success("Profile saved! You're now visible to recruiters.");
   };
 
   const handleToggleVisibility = () => {
@@ -219,7 +295,7 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 fade-in-up pb-12">
-      {/* Navigation Breadcrumb */}
+      {/* Top Breadcrumb */}
       <div className="flex items-center justify-between text-xs">
         <button
           type="button"
@@ -228,11 +304,15 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
         >
           <span>← Back to Hiring Dashboard</span>
         </button>
-        <span className="text-[#E8672E] font-medium">Candidate Onboarding</span>
+        <span className="text-[#E8672E] font-medium font-mono text-[11px] uppercase tracking-wider">
+          {viewMode === 'profile' ? 'Active Candidate Profile' : 'Skill Verification Pipeline'}
+        </span>
       </div>
 
-      {/* Confirmation View: Activated & Visible (Section 13) */}
-      {isActivated ? (
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {/* 1. ACTIVATED PROFILE VIEW */}
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {viewMode === 'profile' && isActivated && (
         <div className="bg-[#17171A] border border-[#2A2A2E] p-6 sm:p-8 rounded-xl space-y-6 relative overflow-hidden">
           <div className="absolute top-0 left-0 bottom-0 w-[2px] bg-[#3FB65F]" />
 
@@ -243,7 +323,7 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-[#F5F5F4]">
-                  You&apos;re now visible to recruiters
+                  You&apos;re visible to recruiters
                 </h2>
                 <p className="text-xs text-[#3FB65F] font-medium mt-0.5">
                   Your profile and verified evidence are discoverable in the hiring marketplace.
@@ -275,7 +355,33 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
             </button>
           </div>
 
-          {/* Profile Metrics Summary Chips */}
+          {/* Verification Callout Banner */}
+          <div className="p-4 rounded-lg bg-gradient-to-r from-[#1E1E22] to-[#1A1A1E] border border-[#E8672E]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#E8672E]/10 border border-[#E8672E]/30 flex items-center justify-center text-[#E8672E] shrink-0 mt-0.5">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-semibold text-white">
+                  Verify More Skills with AI Assessment
+                </h4>
+                <p className="text-[11px] text-[#A3A3A8] mt-0.5 leading-relaxed">
+                  Upload an updated PDF resume to extract skills and take a 10-question grounded
+                  proctored assessment.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setViewMode('upload')}
+              className="btn-primary text-xs py-1.5 px-3 shrink-0 flex items-center gap-1.5"
+            >
+              <Award className="w-3.5 h-3.5" />
+              <span>Verify via Resume</span>
+            </button>
+          </div>
+
+          {/* Profile Metrics Summary */}
           <div className="p-4 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
             <div>
               <div className="text-xl font-bold font-mono text-white">{skills.length}</div>
@@ -286,16 +392,16 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
               <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Verified Skills</div>
             </div>
             <div>
-              <div className="text-xl font-bold font-mono text-[#E8672E]">1</div>
-              <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Resume</div>
+              <div className="text-xl font-bold font-mono text-[#E8672E]">Active</div>
+              <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Radar Status</div>
             </div>
             <div>
-              <div className="text-xl font-bold font-mono text-[#A3A3A8]">2</div>
-              <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Projects</div>
+              <div className="text-xl font-bold font-mono text-[#A3A3A8]">100%</div>
+              <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Evidence Credibility</div>
             </div>
           </div>
 
-          {/* Skills Breakdown */}
+          {/* Active Skills Breakdown */}
           <div className="space-y-3">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-[#A3A3A8]">
               Active Competencies
@@ -309,38 +415,40 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
                   <div>
                     <span className="font-medium text-[#F5F5F4] text-xs block">{s.name}</span>
                     <span className="text-[10px] text-[#6B6B70]">
-                      Self-declared: {s.selfDeclaredProficiency || 'Advanced'}
+                      {s.score ? `Score: ${s.score}%` : `Self-declared: ${s.selfDeclaredProficiency || 'Advanced'}`}
                     </span>
                   </div>
-                  <VerificationBadge status={s.status} />
+                  <VerificationBadge status={s.status} score={s.score} />
                 </div>
               ))}
             </div>
           </div>
 
           {/* Uploaded Resume */}
-          {resumeFile && (
+          {uploadedResumeMeta && (
             <div className="p-3.5 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <FileText className="w-4 h-4 text-[#E8672E]" />
                 <div>
-                  <span className="text-xs font-medium text-white block">{resumeFile.name}</span>
+                  <span className="text-xs font-medium text-white block">
+                    {uploadedResumeMeta.name}
+                  </span>
                   <span className="text-[10px] text-[#6B6B70] font-mono">
-                    {Math.round(resumeFile.size / 1024)} KB · Uploaded & Active
+                    {Math.round(uploadedResumeMeta.size / 1024)} KB · Active in Recruiter Radar
                   </span>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setIsActivated(false)}
+                onClick={() => setViewMode('upload')}
                 className="btn-ghost text-xs py-1 px-2.5"
               >
-                Replace
+                Upload New
               </button>
             </div>
           )}
 
-          {/* Action CTAs */}
+          {/* Actions */}
           <div className="pt-4 border-t border-[#2A2A2E] flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
@@ -354,50 +462,334 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setIsActivated(false)}
+                onClick={() => setViewMode('manual_form')}
                 className="btn-secondary text-xs py-2 px-3"
               >
-                Edit Profile & Skills
+                Edit Skills
               </button>
-              <button
-                type="button"
-                onClick={onBack}
-                className="btn-ghost text-xs py-2 px-3"
-              >
+              <button type="button" onClick={onBack} className="btn-ghost text-xs py-2 px-3">
                 Back to Hiring
               </button>
             </div>
           </div>
         </div>
-      ) : (
-        /* Form Setup: Skills & Resume (Sections 10, 11, 12) */
+      )}
+
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {/* 2. RESUME UPLOAD STEP (Candidate Upload Screen) */}
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {viewMode === 'upload' && (
         <div className="bg-[#17171A] border border-[#2A2A2E] p-6 sm:p-8 rounded-xl space-y-6">
           <div className="border-b border-[#2A2A2E] pb-5">
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E8672E] tracking-wider uppercase mb-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[#E8672E]" />
-              <span>RECRUITER RADAR ACTIVATION</span>
+              <span>STEP 1 · RESUME VERIFICATION PIPELINE</span>
             </div>
             <h2 className="text-2xl font-semibold text-[#F5F5F4] tracking-tight">
-              Get yourself noticed.
+              Upload your resume to get verified.
             </h2>
-            <p className="text-xs sm:text-sm text-[#A3A3A8] mt-1">
-              Add your skills and resume to become discoverable by recruiters looking for verified talent.
+            <p className="text-xs sm:text-sm text-[#A3A3A8] mt-1 leading-relaxed">
+              SkillVerify will extract your claimed technical skills and generate a grounded 10-question
+              assessment. Passing attaches verified badges directly to your profile.
             </p>
           </div>
 
-          <form onSubmit={handleSubmitProfile} className="space-y-6">
-            {/* Section 11: Skills Input */}
+          <div className="space-y-4">
+            {selectedFile ? (
+              <div className="p-4 rounded-xl bg-[#1E1E22] border border-[#3FB65F]/30 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#16261B] border border-[#3FB65F]/30 flex items-center justify-center text-[#3FB65F]">
+                    <FileCheck2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold text-white block">
+                      {selectedFile.name}
+                    </span>
+                    <span className="text-[11px] text-[#6B6B70] font-mono">
+                      {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB · PDF Validated
+                    </span>
+                  </div>
+                </div>
+                <label className="btn-ghost text-xs py-1.5 px-3 cursor-pointer">
+                  <span>Replace</span>
+                  <input
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            ) : (
+              <label className="border-2 border-dashed border-[#2A2A2E] hover:border-[#E8672E] rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition bg-[#1E1E22]/40 block">
+                <Upload className="w-8 h-8 text-[#A3A3A8] mb-2" />
+                <span className="text-sm font-medium text-[#F5F5F4] block">
+                  Click or drag your PDF resume here
+                </span>
+                <span className="text-xs text-[#6B6B70] font-mono mt-1">
+                  PDF only · Maximum 5MB
+                </span>
+                <input
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+              </label>
+            )}
+
+            {resumeError && (
+              <div className="p-3 rounded-lg bg-[#2A1717] border border-[#E0554E]/40 text-xs text-[#E0554E] flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{resumeError}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="pt-4 border-t border-[#2A2A2E] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <button
+              type="button"
+              onClick={() => setViewMode('manual_form')}
+              className="text-xs text-[#A3A3A8] hover:text-white underline text-left"
+            >
+              Or enter skills manually without resume
+            </button>
+
+            <button
+              type="button"
+              onClick={handleStartAnalysis}
+              disabled={!selectedFile}
+              className="btn-primary text-xs py-2.5 px-5 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shrink-0"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Analyze Resume & Generate Assessment</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {/* 3. ANALYZING STEP (Pulse / Progress Screen) */}
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {viewMode === 'analyzing' && (
+        <div className="bg-[#17171A] border border-[#2A2A2E] p-8 sm:p-12 rounded-xl text-center space-y-6">
+          <div className="relative inline-block">
+            <div className="w-16 h-16 rounded-full border-2 border-[#E8672E] border-t-transparent animate-spin mx-auto" />
+            <Sparkles className="w-6 h-6 text-[#E8672E] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-white">
+              {analysisStep === 1 && 'Extracting skills and projects from resume...'}
+              {analysisStep === 2 && 'Grounding technical questions against your background...'}
+              {analysisStep === 3 && 'Synthesizing 10-question proctored assessment...'}
+            </h3>
+            <p className="text-xs text-[#A3A3A8] font-mono">
+              Step {analysisStep} of 3 · Calibrating objective and scenario-based questions
+            </p>
+          </div>
+
+          <div className="max-w-xs mx-auto flex items-center justify-between gap-2 pt-2">
+            <div
+              className={`h-1.5 flex-1 rounded-full ${
+                analysisStep >= 1 ? 'bg-[#E8672E]' : 'bg-[#2A2A2E]'
+              }`}
+            />
+            <div
+              className={`h-1.5 flex-1 rounded-full ${
+                analysisStep >= 2 ? 'bg-[#E8672E]' : 'bg-[#2A2A2E]'
+              }`}
+            />
+            <div
+              className={`h-1.5 flex-1 rounded-full ${
+                analysisStep >= 3 ? 'bg-[#E8672E]' : 'bg-[#2A2A2E]'
+              }`}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {/* 4. INSTRUCTIONS SCREEN (Section 2 of Brief) */}
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {viewMode === 'instructions' && (
+        <div className="bg-[#17171A] border border-[#2A2A2E] p-6 sm:p-8 rounded-xl space-y-6">
+          <div className="border-b border-[#2A2A2E] pb-5">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E8672E] tracking-wider uppercase mb-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E8672E]" />
+              <span>STEP 2 · ASSESSMENT INSTRUCTIONS & PROCTORING</span>
+            </div>
+            <h2 className="text-2xl font-semibold text-[#F5F5F4] tracking-tight">
+              Ready to verify your skills.
+            </h2>
+            <p className="text-xs sm:text-sm text-[#A3A3A8] mt-1">
+              Review your extracted skills and the proctored assessment conditions before starting.
+            </p>
+          </div>
+
+          {/* Card 1: Resume Analysis Summary */}
+          {analysisResult && (
+            <div className="p-5 rounded-xl bg-[#1E1E22] border border-[#2A2A2E] space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#A3A3A8]">
+                  Extracted Technical Profile
+                </h3>
+                <span className="text-xs font-mono text-[#3FB65F] flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" /> Resume Grounded
+                </span>
+              </div>
+
+              {/* Skills */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] text-[#6B6B70] block">Target Skills for Verification:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {analysisResult.extractedSkills.map((s) => (
+                    <span
+                      key={s}
+                      className="px-2.5 py-1 rounded bg-[#17171A] border border-[#E8672E]/40 text-[#F5F5F4] text-xs font-medium"
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tools */}
+              {analysisResult.extractedTools.length > 0 && (
+                <div className="space-y-1.5">
+                  <span className="text-[11px] text-[#6B6B70] block">Identified Tools & Libraries:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {analysisResult.extractedTools.map((t) => (
+                      <span
+                        key={t}
+                        className="px-2 py-0.5 rounded bg-[#17171A] border border-[#2A2A2E] text-[#A3A3A8] text-[11px] font-mono"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Card 2: Assessment Rules & Proctoring Disclosure */}
+          <div className="p-5 rounded-xl bg-[#1E1E22] border border-[#2A2A2E] space-y-3.5">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#A3A3A8]">
+              Assessment Rules & Integrity Standards
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="p-3 rounded-lg bg-[#17171A] border border-[#2A2A2E] space-y-1">
+                <div className="flex items-center gap-2 text-white font-medium">
+                  <Clock className="w-3.5 h-3.5 text-[#E8672E]" />
+                  <span>60-Minute Hard Limit</span>
+                </div>
+                <p className="text-[11px] text-[#6B6B70]">
+                  Timer is enforced server-side. Assessment auto-submits upon expiry.
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg bg-[#17171A] border border-[#2A2A2E] space-y-1">
+                <div className="flex items-center gap-2 text-white font-medium">
+                  <Shield className="w-3.5 h-3.5 text-[#E8672E]" />
+                  <span>10 Grounded Questions</span>
+                </div>
+                <p className="text-[11px] text-[#6B6B70]">
+                  Mix of objective technical MCQs and real-world scenario responses.
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg bg-[#17171A] border border-[#2A2A2E] space-y-1">
+                <div className="flex items-center gap-2 text-white font-medium">
+                  <Camera className="w-3.5 h-3.5 text-[#3FB65F]" />
+                  <span>Local Camera Self-Monitor</span>
+                </div>
+                <p className="text-[11px] text-[#6B6B70]">
+                  Rendered strictly in your browser. SkillVerify does not stream or record video.
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg bg-[#17171A] border border-[#2A2A2E] space-y-1">
+                <div className="flex items-center gap-2 text-white font-medium">
+                  <ArrowRight className="w-3.5 h-3.5 text-[#E8672E]" />
+                  <span>Forward-Only Navigation</span>
+                </div>
+                <p className="text-[11px] text-[#6B6B70]">
+                  One question at a time. Answers cannot be changed once submitted.
+                </p>
+              </div>
+            </div>
+
+            {/* Acknowledgment Checkbox */}
+            <div className="pt-2">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={agreedToProctoring}
+                  onChange={(e) => setAgreedToProctoring(e.target.checked)}
+                  className="mt-0.5 rounded border-[#2A2A2E] bg-[#17171A] text-[#E8672E] focus:ring-0"
+                />
+                <span className="text-xs text-[#A3A3A8] leading-relaxed">
+                  I understand the assessment conditions, forward-only navigation, and agree to the
+                  integrity monitoring.
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="pt-4 border-t border-[#2A2A2E] flex items-center justify-between gap-4">
+            <button
+              type="button"
+              onClick={() => setViewMode('upload')}
+              className="btn-ghost text-xs py-2 px-3"
+            >
+              Back to Upload
+            </button>
+
+            <button
+              type="button"
+              onClick={handleLaunchAssessment}
+              disabled={!agreedToProctoring}
+              className="btn-primary text-xs py-2.5 px-6 flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            >
+              <span>Start Assessment</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {/* 5. MANUAL FORM FALLBACK (Self-declare skills without assessment) */}
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {viewMode === 'manual_form' && (
+        <div className="bg-[#17171A] border border-[#2A2A2E] p-6 sm:p-8 rounded-xl space-y-6">
+          <div className="border-b border-[#2A2A2E] pb-5">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E8672E] tracking-wider uppercase mb-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E8672E]" />
+              <span>MANUAL PROFILE CONFIGURATION</span>
+            </div>
+            <h2 className="text-2xl font-semibold text-[#F5F5F4] tracking-tight">
+              Self-declare your skills.
+            </h2>
+            <p className="text-xs sm:text-sm text-[#A3A3A8] mt-1">
+              Add skills manually. Note: Recruiter ranking prioritizes candidates with verified badges.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmitManualProfile} className="space-y-6">
             <div className="p-5 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-semibold text-white">Your Skills</h3>
                   <p className="text-[11px] text-[#A3A3A8]">
-                    Self-declare your proficiency level. Platform verification is attached automatically.
+                    Self-declare proficiency. Platform verification requires taking the assessment.
                   </p>
                 </div>
-                <span className="text-xs font-mono text-[#E8672E]">
-                  {skills.length} skills added
-                </span>
+                <span className="text-xs font-mono text-[#E8672E]">{skills.length} skills</span>
               </div>
 
               {/* Skills List */}
@@ -409,13 +801,13 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-white text-xs sm:text-sm">{skill.name}</span>
+                        <span className="font-semibold text-white text-xs">{skill.name}</span>
                         <span className="text-[10px] text-[#A3A3A8] font-mono">
-                          Self-declared: <strong className="text-white">{skill.selfDeclaredProficiency || 'Advanced'}</strong>
+                          Level: <strong className="text-white">{skill.selfDeclaredProficiency || 'Advanced'}</strong>
                         </span>
                       </div>
                       <div className="text-[11px] text-[#6B6B70] font-mono mt-0.5 flex items-center gap-1.5">
-                        <span>Platform verification:</span>
+                        <span>Status:</span>
                         <VerificationBadge status={skill.status} score={skill.score} />
                       </div>
                     </div>
@@ -431,15 +823,14 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
                 ))}
               </div>
 
-              {/* Add Skill Controls */}
+              {/* Add Skill */}
               <div className="pt-3 border-t border-[#2A2A2E] space-y-3">
-                <span className="text-xs font-medium text-[#A3A3A8] block">Add Skill</span>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <input
                     type="text"
                     value={newSkillName}
                     onChange={(e) => setNewSkillName(e.target.value)}
-                    placeholder="Search or type skill..."
+                    placeholder="Skill name..."
                     className="input text-xs sm:col-span-2"
                   />
                   <select
@@ -447,9 +838,9 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
                     onChange={(e) => setNewProficiency(e.target.value as any)}
                     className="input text-xs font-medium"
                   >
-                    <option value="Beginner">Proficiency: Beginner</option>
-                    <option value="Intermediate">Proficiency: Intermediate</option>
-                    <option value="Advanced">Proficiency: Advanced</option>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
                   </select>
                 </div>
 
@@ -474,90 +865,28 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
                     className="btn-secondary text-xs disabled:opacity-50"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Add Skill</span>
+                    <span>Add</span>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Section 12: Resume Upload */}
-            <div className="p-5 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-white">Upload your resume</h3>
-                  <p className="text-[11px] text-[#A3A3A8]">
-                    PDF or DOCX format (max 5MB). Recruiters will view this alongside your verified benchmarks.
-                  </p>
-                </div>
-                {resumeFile && (
-                  <span className="text-xs font-mono text-[#3FB65F] flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Resume uploaded
-                  </span>
-                )}
-              </div>
-
-              {resumeFile ? (
-                <div className="p-4 rounded-lg bg-[#17171A] border border-[#3FB65F]/30 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-[#16261B] border border-[#3FB65F]/30 flex items-center justify-center text-[#3FB65F]">
-                      <FileCheck2 className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-white block">{resumeFile.name}</span>
-                      <span className="text-[10px] text-[#6B6B70] font-mono">
-                        {(resumeFile.size / (1024 * 1024)).toFixed(2)} MB · Ready for recruiters
-                      </span>
-                    </div>
-                  </div>
-                  <label className="btn-ghost text-xs py-1.5 px-3 cursor-pointer">
-                    <span>Replace</span>
-                    <input
-                      type="file"
-                      accept=".pdf,.docx,.doc"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-              ) : (
-                <label className="border-2 border-dashed border-[#2A2A2E] hover:border-[#E8672E] rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition bg-[#17171A] block">
-                  <Upload className="w-6 h-6 text-[#A3A3A8] mb-2" />
-                  <span className="text-xs font-medium text-[#F5F5F4] block">
-                    {uploading ? 'Processing resume...' : 'Click or drag file to upload your resume'}
-                  </span>
-                  <span className="text-[11px] text-[#6B6B70] font-mono mt-0.5">
-                    PDF / DOCX · Max 5MB
-                  </span>
-                  <input
-                    type="file"
-                    accept=".pdf,.docx,.doc"
-                    onChange={handleFileSelect}
-                    disabled={uploading}
-                    className="hidden"
-                  />
-                </label>
-              )}
-
-              {resumeError && (
-                <div className="p-3 rounded-lg bg-[#2A1717] border border-[#E0554E]/40 text-xs text-[#E0554E] flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{resumeError}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Submit Action */}
-            <div className="pt-4 border-t border-[#2A2A2E] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <p className="text-xs text-[#6B6B70]">
-                By submitting, your profile will become discoverable by employers. You can toggle visibility off anytime.
-              </p>
+            {/* Action buttons */}
+            <div className="pt-4 border-t border-[#2A2A2E] flex items-center justify-between gap-4">
+              <button
+                type="button"
+                onClick={() => setViewMode(isActivated ? 'profile' : 'upload')}
+                className="btn-ghost text-xs py-2 px-3"
+              >
+                Cancel
+              </button>
 
               <button
                 type="submit"
                 disabled={skills.length === 0}
-                className="btn-primary text-xs py-2.5 px-5 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shrink-0"
+                className="btn-primary text-xs py-2.5 px-5 flex items-center gap-2 cursor-pointer"
               >
-                <span>Start Getting Hired</span>
+                <span>Save Profile</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>

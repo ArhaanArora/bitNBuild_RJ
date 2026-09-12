@@ -19,6 +19,7 @@ import { verificationRouter } from './verification/router';
 import { analysisRouter } from './analysis/router';
 import { notificationsRouter } from './notifications/router';
 import { adminRouter } from './admin/router';
+import { hiringRouter } from './hiring/router';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -58,6 +59,7 @@ app.use('/api/verification', verificationRouter);
 app.use('/api/analysis', analysisRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/hiring', hiringRouter);
 
 import { cmsService } from './services/cms.service';
 

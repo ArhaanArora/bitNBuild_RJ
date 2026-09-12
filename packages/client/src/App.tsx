@@ -31,6 +31,8 @@ import PublicProfile from './pages/verify/PublicProfile';
 import ProjectReportPage from './pages/verify/ProjectReportPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import HiringHub from './pages/hiring/HiringHub';
+import StrictAssessmentRunner from './pages/hiring/StrictAssessmentRunner';
+import StrictAssessmentResult from './pages/hiring/StrictAssessmentResult';
 
 function ProtectedRoute({ children }: { children: React.ReactNode; roles?: string[] }) {
   const { loading } = useAuth();
@@ -61,7 +63,6 @@ export default function App() {
         <Route path="/hackathons/find-teammates" element={<FindTeammatePage />} />
         <Route path="/buddy" element={<FindTeammatePage />} />
         <Route path="/hiring" element={<HiringHub />} />
-        <Route path="/hiring/*" element={<HiringHub />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/teams/:id" element={<TeamDetail />} />
         <Route path="/teams/:id/discover" element={<DiscoverCandidates />} />
@@ -82,6 +83,10 @@ export default function App() {
       {/* Assessment (full-screen, no shell) */}
       <Route path="/assessment/:sessionId" element={<AssessmentRunner />} />
       <Route path="/assessment/:sessionId/result" element={<AssessmentResult />} />
+
+      {/* Strict Resume Verification Assessment (zero-chrome, proctored) */}
+      <Route path="/hiring/assessment/:assessmentId" element={<StrictAssessmentRunner />} />
+      <Route path="/hiring/assessment/:assessmentId/result" element={<StrictAssessmentResult />} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
