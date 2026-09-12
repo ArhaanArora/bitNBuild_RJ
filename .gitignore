@@ -1,0 +1,64 @@
+# Dependencies
+/node_modules
+/.pnpm-store
+/.yarn
+/.pnpm
+
+# Next.js Build Output
+/.next/
+/out/
+/build
+
+# Production Output
+/dist
+
+# Environment Variables & Secrets (Keep your local secrets out of git!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.*
+!*.env.example
+
+# Debug & Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# Vercel Integration
+.vercel
+
+# Serverless / Database / Local Services
+.serverless
+/.turbo
+*.db
+*.sqlite
+*.sqlite-journal
+
+# Testing & Coverage
+/coverage
+/.nyc_output
+/cypress/screenshots
+/cypress/videos
+
+# IDE & Editor Files
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# TypeScript Cache
+*.tsbuildinfo
+next-env.d.ts

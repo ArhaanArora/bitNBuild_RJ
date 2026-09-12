@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: 79 70 229;      /* indigo-600 */
+    --color-accent: 16 185 129;      /* emerald-500 */
+    --color-danger: 239 68 68;       /* red-500 */
+    --color-warn: 245 158 11;        /* amber-500 */
+    --color-surface: 17 24 39;       /* gray-900 */
+    --color-card: 31 41 55;          /* gray-800 */
+    --color-border: 55 65 81;        /* gray-700 */
+  }
+
+  html { font-family: 'Inter', sans-serif; }
+  body { @apply bg-gray-950 text-gray-100 min-h-screen antialiased; }
+  * { @apply border-gray-700; }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium
+           text-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2
+           focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-indigo-600 hover:bg-indigo-500 text-white focus:ring-indigo-500
+           active:scale-95;
+  }
+  .btn-accent {
+    @apply btn bg-emerald-600 hover:bg-emerald-500 text-white focus:ring-emerald-500
+           active:scale-95;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent hover:bg-gray-800 text-gray-300 hover:text-white
+           border border-gray-700 focus:ring-gray-500;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 hover:bg-red-500 text-white focus:ring-red-500 active:scale-95;
+  }
+  .btn-sm { @apply px-3 py-1.5 text-xs; }
+
+  .card {
+    @apply bg-gray-800 border border-gray-700 rounded-xl p-5 shadow-lg;
+  }
+  .card-hover {
+    @apply card transition-all duration-200 hover:border-indigo-500 hover:shadow-indigo-900/30 hover:shadow-xl;
+  }
+
+  .input {
+    @apply w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100
+           placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500
+           focus:border-transparent transition-all;
+  }
+  .label { @apply block text-xs font-medium text-gray-400 mb-1; }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-verified { @apply badge bg-emerald-900/40 text-emerald-400 border border-emerald-700; }
+  .badge-unverified { @apply badge bg-gray-700/40 text-gray-400 border border-gray-600; }
+  .badge-in-progress { @apply badge bg-amber-900/40 text-amber-400 border border-amber-700; }
+  .badge-expired { @apply badge bg-red-900/40 text-red-400 border border-red-700; }
+
+  .score-ring {
+    @apply relative inline-flex items-center justify-center;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold text-white mb-4;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-400
+           hover:text-white hover:bg-gray-800 transition-all duration-150;
+  }
+  .nav-link.active {
+    @apply text-white bg-indigo-600/20 border border-indigo-500/30;
+  }
+
+  /* Assessment integrity overlay */
+  .integrity-banner {
+    @apply fixed top-0 left-0 right-0 z-50 flex items-center gap-3 px-6 py-2.5
+           bg-red-900/90 backdrop-blur-sm border-b border-red-700 text-red-100 text-sm font-medium;
+  }
+
+  /* Score bar */
+  .score-bar { @apply h-2 rounded-full bg-gray-700 overflow-hidden; }
+  .score-fill { @apply h-full rounded-full transition-all duration-700; }
+
+  /* Camera check overlay */
+  .camera-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center
+           bg-gray-950/90 backdrop-blur-sm;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { @apply bg-gray-900; }
+::-webkit-scrollbar-thumb { @apply bg-gray-700 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-gray-600; }
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+}
+
+.fade-in-up { animation: fadeInUp 0.3s ease-out forwards; }
+.pulse-ring { animation: pulse-ring 1.5s ease-in-out infinite; }
