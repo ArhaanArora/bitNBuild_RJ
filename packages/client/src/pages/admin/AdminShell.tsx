@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Activity, Cpu, Users, Briefcase, Trophy, ShieldAlert, Building, ShieldCheck, 
-  Database, Mail, Globe, Server, Flag, Lock, Search, Command, RefreshCw, Zap
+  Database, Mail, Globe, Server, Flag, Lock, Search, RefreshCw
 } from 'lucide-react';
 import { CommandPalette } from './CommandPalette';
 
@@ -66,23 +66,26 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-950 text-gray-100">
+    <div className="flex flex-col min-h-screen bg-[#0D0D0F] text-[#F5F5F4]">
       {/* Top Header Bar */}
-      <header className="sticky top-0 z-40 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 px-6 py-3 flex items-center justify-between shadow-md">
+      <header className="sticky top-0 z-40 bg-[#17171A] border-b border-[#2A2A2E] px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white font-black text-sm shadow-md shadow-indigo-500/20">
-            OS
+          <div className="w-8 h-8 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] flex items-center justify-center text-xs font-mono font-bold">
+            <span className="text-[#F5F5F4]">S</span>
+            <span className="text-[#E8672E]">V</span>
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-black text-white tracking-wide">SUPER ADMIN COMMAND CENTER</h1>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold flex items-center gap-1 font-mono">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                100% OPERATIONAL
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-xs font-bold text-[#F5F5F4] tracking-wider uppercase font-mono">
+                SUPER ADMIN COMMAND CENTER
+              </h1>
+              <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-[#16261B] text-[#3FB65F] border border-[#3FB65F]/30 flex items-center gap-1.5 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3FB65F]" />
+                OPERATIONAL
               </span>
             </div>
-            <span className="text-[11px] text-gray-400 font-mono">
-              Neon PostgreSQL • 14ms DB Latency • Section 20A AI Guardrails Active
+            <span className="text-[11px] text-[#6B6B70] font-mono">
+              PostgreSQL • Sub-15ms Latency • AI Guardrails Active
             </span>
           </div>
         </div>
@@ -91,11 +94,11 @@ export const AdminShell: React.FC<AdminShellProps> = ({
           {/* Search Trigger Button */}
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="flex items-center gap-3 px-3.5 py-1.5 rounded-xl bg-gray-950/80 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white transition text-xs shadow-inner"
+            className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] hover:border-[#38383D] text-[#A3A3A8] hover:text-[#F5F5F4] transition-colors text-xs font-mono"
           >
-            <Search className="w-3.5 h-3.5 text-gray-500" />
-            <span className="hidden sm:inline">Search entities or actions...</span>
-            <kbd className="px-1.5 py-0.5 text-[10px] bg-gray-900 border border-gray-700 rounded text-gray-400 font-mono">
+            <Search className="w-3.5 h-3.5 text-[#6B6B70]" />
+            <span className="hidden sm:inline">Quick command...</span>
+            <kbd className="px-1.5 py-0.2 text-[10px] bg-[#17171A] border border-[#2A2A2E] rounded text-[#6B6B70]">
               Ctrl K
             </kbd>
           </button>
@@ -105,7 +108,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
             <button
               onClick={onRefresh}
               title="Refresh All Real-time Data"
-              className="p-2 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-white transition shadow-sm"
+              className="p-1.5 rounded-lg bg-[#1E1E22] hover:bg-[#2A2A2E] border border-[#2A2A2E] text-[#A3A3A8] hover:text-[#F5F5F4] transition-colors"
             >
               <RefreshCw className="w-4 h-4" />
             </button>
@@ -116,10 +119,10 @@ export const AdminShell: React.FC<AdminShellProps> = ({
       {/* Main Two-Column Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sub-Navigation Sidebar */}
-        <aside className="w-64 shrink-0 bg-gray-900/50 border-r border-gray-800/80 p-4 space-y-6 overflow-y-auto hidden md:block">
+        <aside className="w-60 shrink-0 bg-[#17171A] border-r border-[#2A2A2E] p-3 space-y-5 overflow-y-auto hidden md:block">
           {navSections.map(section => (
             <div key={section.title} className="space-y-1">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-gray-500 px-3 block">
+              <span className="text-[10px] uppercase font-mono tracking-widest text-[#6B6B70] px-3 block">
                 {section.title}
               </span>
               <div className="space-y-0.5 pt-1">
@@ -129,19 +132,19 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                     <button
                       key={item.id}
                       onClick={() => onSelectTab(item.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors ${
                         isActive
-                          ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-600/20'
-                          : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                          ? 'bg-[#241C16] text-[#F5F5F4] font-medium border-l-2 border-[#E8672E]'
+                          : 'text-[#A3A3A8] hover:text-[#F5F5F4] hover:bg-[#1E1E22]'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <span className={isActive ? 'text-white' : 'text-gray-400'}>{item.icon}</span>
+                        <span className={isActive ? 'text-[#E8672E]' : 'text-[#6B6B70]'}>{item.icon}</span>
                         <span>{item.label}</span>
                       </div>
                       {item.badge && (
-                        <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${
-                          isActive ? 'bg-white/20 text-white' : 'bg-gray-800 text-gray-400'
+                        <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono uppercase ${
+                          isActive ? 'bg-[#E8672E]/20 text-[#E8672E]' : 'bg-[#1E1E22] text-[#6B6B70] border border-[#2A2A2E]'
                         }`}>
                           {item.badge}
                         </span>
@@ -155,13 +158,13 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         </aside>
 
         {/* Mobile Horizontal Navigation Tabs */}
-        <div className="md:hidden flex items-center gap-1 p-2 bg-gray-900 border-b border-gray-800 overflow-x-auto">
+        <div className="md:hidden flex items-center gap-1 p-2 bg-[#17171A] border-b border-[#2A2A2E] overflow-x-auto">
           {navSections.flatMap(s => s.items).map(item => (
             <button
               key={item.id}
               onClick={() => onSelectTab(item.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition ${
-                activeTab === item.id ? 'bg-indigo-600 text-white font-bold' : 'text-gray-400'
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-colors ${
+                activeTab === item.id ? 'bg-[#241C16] text-[#E8672E] border border-[#E8672E]/40 font-medium' : 'text-[#A3A3A8]'
               }`}
             >
               {item.label}

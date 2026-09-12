@@ -189,16 +189,16 @@ export default function AssessmentRunner() {
       {/* Camera check overlay */}
       {cameraCheck && (
         <div className="camera-overlay">
-          <div className="card max-w-md w-full mx-4 text-center border-amber-600 pulse-ring">
-            <div className="text-amber-400 text-3xl mb-3">📷</div>
-            <h3 className="text-lg font-bold text-white mb-2">Camera Verification</h3>
-            <p className="text-gray-300 mb-4">{cameraCheck.prompt}</p>
-            <div className={`text-4xl font-bold mb-4 ${cameraCheck.timeLeft <= 5 ? 'text-red-400' : 'text-amber-400'}`}>
-              {cameraCheck.timeLeft}s
+          <div className="bg-[#17171A] border border-[#2A2A2E] rounded-xl p-5 max-w-md w-full mx-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono uppercase tracking-wider text-[#E8672E]">Camera Check (Integrity)</span>
+              <span className="text-xs font-mono font-bold text-[#D89A3E]">⏱ {cameraCheck.timeLeft}s</span>
             </div>
-            <div className="flex gap-3">
-              <button onClick={() => handleCameraResponse(false)} className="btn-ghost flex-1">Can't do this</button>
-              <button onClick={() => handleCameraResponse(true)} className="btn-accent flex-1">Done ✓</button>
+            <p className="text-sm text-[#F5F5F4] leading-relaxed">{cameraCheck.prompt}</p>
+            <p className="text-xs text-[#6B6B70]">This is a quick periodic check. Failure to respond will be logged as an integrity anomaly.</p>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => handleCameraResponse(false)} className="btn-ghost text-xs flex-1 py-2">Can't do this</button>
+              <button onClick={() => handleCameraResponse(true)} className="btn-primary text-xs flex-1 py-2">Done ✓</button>
             </div>
           </div>
         </div>
@@ -207,22 +207,22 @@ export default function AssessmentRunner() {
       {/* Rough work modal */}
       {showRoughWork && (
         <div className="camera-overlay">
-          <div className="card max-w-md w-full mx-4">
-            <h3 className="section-title">Submit Rough Work (Optional)</h3>
-            <p className="text-sm text-gray-400 mb-4">Upload any rough work sheets, notes, or sketches used during the assessment. This serves as supporting evidence.</p>
+          <div className="bg-[#17171A] border border-[#2A2A2E] rounded-xl p-5 max-w-md w-full mx-4 space-y-4">
+            <h3 className="text-sm font-semibold text-[#F5F5F4] uppercase font-mono tracking-wider">Submit Rough Work (Optional)</h3>
+            <p className="text-xs text-[#A3A3A8] leading-relaxed">Upload any rough work sheets, notes, or sketches used during the assessment. This serves as supporting evidence.</p>
             <input
               type="file" accept="image/*" multiple
               onChange={e => setRoughWorkFiles(Array.from(e.target.files ?? []))}
-              className="block w-full text-sm text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 mb-4"
+              className="block w-full text-xs text-[#A3A3A8] file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#1E1E22] file:text-[#F5F5F4] file:border file:border-[#2A2A2E] hover:file:bg-[#2A2A2E] cursor-pointer"
             />
             {roughWorkFiles.length > 0 && (
-              <ul className="text-xs text-gray-400 mb-4 space-y-1">
+              <ul className="text-xs text-[#A3A3A8] space-y-1 font-mono">
                 {roughWorkFiles.map(f => <li key={f.name}>✓ {f.name}</li>)}
               </ul>
             )}
-            <div className="flex gap-3">
-              <button onClick={() => { setShowRoughWork(false); handleSubmit(); }} className="btn-ghost flex-1">Skip</button>
-              <button onClick={() => { setShowRoughWork(false); handleSubmit(); }} className="btn-primary flex-1" disabled={submitting}>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => { setShowRoughWork(false); handleSubmit(); }} className="btn-ghost text-xs flex-1 py-2">Skip</button>
+              <button onClick={() => { setShowRoughWork(false); handleSubmit(); }} className="btn-primary text-xs flex-1 py-2" disabled={submitting}>
                 {submitting ? 'Submitting…' : 'Submit Assessment'}
               </button>
             </div>
@@ -232,22 +232,24 @@ export default function AssessmentRunner() {
 
       {/* Integrity banner */}
       {integrityEvents.length > 0 && (
-        <div className="integrity-banner">
-          ⚠ Integrity event recorded: {integrityEvents[integrityEvents.length - 1]?.type?.replace(/_/g, ' ')}
-          <span className="ml-auto text-xs opacity-70">{integrityEvents.length} event(s) total</span>
+        <div className="bg-[#2B2213] border-b border-[#D89A3E]/30 text-[#D89A3E] text-xs px-6 py-2 flex items-center justify-between font-mono">
+          <span>⚠ Integrity event recorded: {integrityEvents[integrityEvents.length - 1]?.type?.replace(/_/g, ' ')}</span>
+          <span className="opacity-70">{integrityEvents.length} event(s) total</span>
         </div>
       )}
 
       {/* Header */}
-      <header className="bg-gray-900 border-b border-gray-800 px-6 py-3 flex items-center gap-4 sticky top-0 z-10">
+      <header className="bg-[#17171A] border-b border-[#2A2A2E] px-6 py-3 flex items-center gap-4 sticky top-0 z-10">
         <div className="flex-1">
-          <p className="text-sm font-medium text-white">{assessment.title}</p>
+          <p className="text-sm font-semibold text-[#F5F5F4]">{assessment.title}</p>
           <div className="flex items-center gap-3 mt-1">
-            <div className="score-bar flex-1 max-w-48"><div className="score-fill bg-indigo-500" style={{ width: `${progress}%` }} /></div>
-            <span className="text-xs text-gray-400">{currentIdx + 1} / {assessment.questions.length}</span>
+            <div className="h-1.5 bg-[#1E1E22] rounded-full overflow-hidden flex-1 max-w-48">
+              <div className="h-full bg-[#E8672E] transition-all" style={{ width: `${progress}%` }} />
+            </div>
+            <span className="text-xs text-[#6B6B70] font-mono">{currentIdx + 1} / {assessment.questions.length}</span>
           </div>
         </div>
-        <div className={`font-mono font-bold text-lg ${isTimeCritical ? 'text-red-400 animate-pulse' : 'text-gray-300'}`}>
+        <div className={`font-mono font-bold text-base ${isTimeCritical ? 'text-[#E0554E] animate-pulse' : 'text-[#A3A3A8]'}`}>
           ⏱ {formatTime(timeLeft)}
         </div>
       </header>
@@ -255,15 +257,21 @@ export default function AssessmentRunner() {
       {/* Question */}
       <div className="flex-1 max-w-3xl mx-auto w-full px-6 py-8">
         {currentQuestion && (
-          <div className="fade-in-up space-y-6">
+          <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <span className={`badge ${currentQuestion.type === 'mcq' ? 'badge-verified' : currentQuestion.type === 'practical' ? 'badge-in-progress' : 'badge-unverified'}`}>
+              <span className={`text-[11px] font-mono uppercase px-2.5 py-0.5 rounded border ${
+                currentQuestion.type === 'mcq'
+                  ? 'border-[#3FB65F]/30 bg-[#16261B] text-[#3FB65F]'
+                  : currentQuestion.type === 'practical'
+                  ? 'border-[#E8672E]/30 bg-[#241C16] text-[#E8672E]'
+                  : 'border-[#2A2A2E] bg-[#1E1E22] text-[#A3A3A8]'
+              }`}>
                 {currentQuestion.type === 'mcq' ? 'Multiple Choice' : currentQuestion.type === 'practical' ? 'Practical' : 'Short Answer'}
               </span>
-              <span className="text-xs text-gray-500">{currentQuestion.points} point{currentQuestion.points !== 1 ? 's' : ''}</span>
+              <span className="text-xs text-[#6B6B70] font-mono">{currentQuestion.points} point{currentQuestion.points !== 1 ? 's' : ''}</span>
             </div>
 
-            <p className="text-base text-gray-100 leading-relaxed whitespace-pre-wrap">{currentQuestion.body}</p>
+            <p className="text-base text-[#F5F5F4] leading-relaxed whitespace-pre-wrap">{currentQuestion.body}</p>
 
             {/* MCQ */}
             {currentQuestion.type === 'mcq' && currentQuestion.options && (
@@ -272,9 +280,13 @@ export default function AssessmentRunner() {
                   <button
                     key={opt.id}
                     onClick={() => handleAnswer(opt.id)}
-                    className={`w-full text-left p-3.5 rounded-lg border text-sm transition-all ${answers[currentQuestion.id] === opt.id ? 'border-indigo-500 bg-indigo-900/20 text-white' : 'border-gray-700 text-gray-300 hover:border-gray-600 hover:bg-gray-800'}`}
+                    className={`w-full text-left p-3.5 rounded-xl border text-sm transition-colors ${
+                      answers[currentQuestion.id] === opt.id
+                        ? 'border-[#E8672E] bg-[#241C16] text-[#F5F5F4]'
+                        : 'border-[#2A2A2E] bg-[#17171A] text-[#A3A3A8] hover:border-[#38383D] hover:bg-[#1E1E22] hover:text-[#F5F5F4]'
+                    }`}
                   >
-                    <span className="font-medium text-gray-500 mr-2">{opt.id.toUpperCase()}.</span> {opt.text}
+                    <span className="font-mono text-[#6B6B70] mr-2.5">{opt.id.toUpperCase()}.</span> {opt.text}
                   </button>
                 ))}
               </div>
@@ -284,7 +296,7 @@ export default function AssessmentRunner() {
             {(currentQuestion.type === 'short_answer' || currentQuestion.type === 'practical') && (
               <textarea
                 rows={currentQuestion.type === 'practical' ? 12 : 5}
-                className="input font-mono text-sm resize-none"
+                className="input font-mono text-sm resize-none w-full"
                 placeholder={currentQuestion.type === 'practical' ? 'Write your code or solution here…' : 'Write your explanation here…'}
                 value={answers[currentQuestion.id] ?? ''}
                 onChange={e => handleAnswer(e.target.value)}
@@ -293,22 +305,22 @@ export default function AssessmentRunner() {
 
             {/* Adaptive follow-up */}
             {adaptiveFollowup && (
-              <div className="card border-amber-700/50 bg-amber-900/10">
-                <p className="text-xs text-amber-400 font-medium mb-2">⚡ Quick follow-up (integrity check)</p>
-                <p className="text-sm text-gray-200 mb-3">{adaptiveFollowup}</p>
+              <div className="bg-[#2B2213] border border-[#D89A3E]/30 rounded-xl p-4 space-y-2">
+                <p className="text-xs text-[#D89A3E] font-mono font-medium">⚡ QUICK FOLLOW-UP (INTEGRITY CHECK)</p>
+                <p className="text-sm text-[#F5F5F4]">{adaptiveFollowup}</p>
                 <textarea
                   rows={3}
-                  className="input text-sm"
-                  placeholder="Brief explanation…"
+                  className="input text-sm w-full"
+                  placeholder="Brief explanation in your own words…"
                   value={adaptiveAnswer}
                   onChange={e => setAdaptiveAnswer(e.target.value)}
                 />
               </div>
             )}
 
-            <div className="flex justify-end">
-              <button onClick={goNext} className="btn-primary px-8">
-                {currentIdx < assessment.questions.length - 1 ? 'Next →' : 'Review & Submit'}
+            <div className="flex justify-end pt-4 border-t border-[#2A2A2E]">
+              <button onClick={goNext} className="btn-primary text-xs py-2 px-6">
+                {currentIdx < assessment.questions.length - 1 ? 'Next Question →' : 'Review & Submit Assessment'}
               </button>
             </div>
           </div>
