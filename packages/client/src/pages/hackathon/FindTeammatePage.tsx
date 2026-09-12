@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -13,6 +13,7 @@ import CandidateProfileModal from './buddy/CandidateProfileModal';
 import ContactModal from './buddy/ContactModal';
 import RequestTeamModal from './buddy/RequestTeamModal';
 import VerificationChallengeModal from './buddy/VerificationChallengeModal';
+import { api } from '../../lib/api';
 import {
   Users,
   Search,
@@ -96,9 +97,49 @@ export default function FindTeammatePage() {
     hackathon,
   }), [role, requiredSkills, experienceLevel, locationPreference, hackathon]);
 
-  // Compute matches
+  // Real PostgreSQL Database Matches
+  const [dbMatches, setDbMatches] = useState<CandidateMatch[] | null>(null);
+  const [isFromDatabase, setIsFromDatabase] = useState(false);
+
+  const fetchMatches = async () => {
+    setLoading(true);
+    setHasSearched(true);
+    try {
+      const res = await api.post('/teams/find-teammates', {
+        requiredSkills,
+        experienceLevel,
+        locationPreference,
+        hackathonId: hackathon,
+      });
+      if (res.data?.matches && res.data.matches.length > 0) {
+        setDbMatches(res.data.matches);
+        setIsFromDatabase(true);
+        toast.success(`Matched ${res.data.matches.length} candidates directly from PostgreSQL!`);
+      } else {
+        setDbMatches(null);
+        setIsFromDatabase(false);
+      }
+    } catch (err) {
+      console.warn('Backend matching API fallback:', err);
+      setDbMatches(null);
+      setIsFromDatabase(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMatches();
+  }, [requiredSkills, experienceLevel, hackathon]);
+
+  // Compute matches (from DB or fallback mock)
   const candidateMatches: CandidateMatch[] = useMemo(() => {
-    let list = MOCK_CANDIDATES.map((cand) => computeCandidateMatch(cand, currentRequirement));
+    let list: CandidateMatch[] = [];
+    if (dbMatches && dbMatches.length > 0) {
+      list = [...dbMatches];
+    } else {
+      list = MOCK_CANDIDATES.map((cand) => computeCandidateMatch(cand, currentRequirement));
+    }
 
     // Role filter chip
     if (activeRoleFilter !== 'All') {
@@ -107,9 +148,9 @@ export default function FindTeammatePage() {
         const f = activeRoleFilter.toLowerCase();
         if (f === 'ui/ux' || f === 'ui-ux') return cRole.includes('design') || cRole.includes('ui');
         if (f === 'frontend') return cRole.includes('frontend') || cRole.includes('react');
-        if (f === 'backend') return cRole.includes('backend') || cRole.includes('cloud') || cRole.includes('go');
+        if (f === 'backend') return cRole.includes('backend') || cRole.includes('cloud') || cRole.includes('go') || cRole.includes('django');
         if (f === 'ai/ml' || f === 'ai-ml') return cRole.includes('ai') || cRole.includes('ml');
-        if (f === 'full-stack') return cRole.includes('full-stack');
+        if (f === 'full-stack') return cRole.includes('full-stack') || cRole.includes('full');
         return true;
       });
     }
@@ -128,7 +169,7 @@ export default function FindTeammatePage() {
     });
 
     return list;
-  }, [currentRequirement, activeRoleFilter, sortBy]);
+  }, [dbMatches, currentRequirement, activeRoleFilter, sortBy]);
 
   // Skill management
   const toggleSkill = (skill: string) => {
@@ -149,12 +190,7 @@ export default function FindTeammatePage() {
   };
 
   const handleSearch = () => {
-    setLoading(true);
-    setHasSearched(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast.success(`Found ${candidateMatches.length} candidates backed by verified evidence`);
-    }, 400);
+    fetchMatches();
   };
 
   return (
@@ -404,6 +440,12 @@ export default function FindTeammatePage() {
             <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-gray-800 text-gray-300">
               {candidateMatches.length} candidates
             </span>
+            {isFromDatabase && (
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live PostgreSQL Verified
+              </span>
+            )}
           </div>
           <span className="text-xs text-gray-400 font-mono hidden sm:inline">
             Ranked by: Skill Match + Assessment + Portfolio + GitHub Evidence
@@ -487,7 +529,13 @@ export default function FindTeammatePage() {
           match={selectedMatchForRequest}
           hackathonName={hackathon}
           onClose={() => setSelectedMatchForRequest(null)}
-          onConfirm={(candidateId) => {
+          onConfirm={async (candidateId, message) => {
+            try {
+              await api.post('/teams/direct-invite', { candidateId, message });
+              toast.success('Team invitation registered in database and notification sent!');
+            } catch (err) {
+              console.warn('Invite API error:', err);
+            }
             setRequestStates((prev) => ({ ...prev, [candidateId]: 'REQUEST_SENT' }));
           }}
         />
@@ -497,7 +545,13 @@ export default function FindTeammatePage() {
         <VerificationChallengeModal
           candidate={selectedCandidateForChallenge}
           onClose={() => setSelectedCandidateForChallenge(null)}
-          onChallengeSent={(candidateId) => {
+          onChallengeSent={async (candidateId, skillName, message) => {
+            try {
+              await api.post('/teams/direct-challenge', { candidateId, skillName, message });
+              toast.success(`Verification challenge logged in database and dispatched!`);
+            } catch (err) {
+              console.warn('Challenge API error:', err);
+            }
             setRequestStates((prev) => ({ ...prev, [candidateId]: 'CHALLENGE_SENT' }));
           }}
         />

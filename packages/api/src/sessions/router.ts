@@ -28,7 +28,7 @@ const INTEGRITY_CAPS: Record<string, number> = {
   PASTE_ATTEMPT: 24, CUT_ATTEMPT: 15, RIGHT_CLICK: 9,
 };
 
-function calcIntegrityScore(events: { eventType: string }[], cameras: { passed: boolean | null; timedOut: boolean }[], fastFlags: number, hasRoughWork: boolean): number {
+function calcIntegrityScore(events: { eventType: string }[], cameras: { passed: boolean | null; timedOut: boolean | null }[], fastFlags: number, hasRoughWork: boolean): number {
   let score = 100;
 
   // Event deductions

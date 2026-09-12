@@ -524,11 +524,27 @@ export function synthesizeFinalReport(
 
   // ─── Generate 3D Constellation Scene Graph ──────────────────────────────
   const coreColor = overallScore >= 80 ? '#10B981' : overallScore >= 60 ? '#F59E0B' : '#EF4444';
-  const nodes = [
+  const nodes: Array<{
+    id: string;
+    label: string;
+    role: 'core' | 'satellite';
+    agentId?: string;
+    score: number;
+    weight: number;
+    confidence: number;
+    risk: RiskLevel | 'HIGH' | 'LOW';
+    color: string;
+    radius: number;
+    orbitRadius: number;
+    orbitSpeed: number;
+    orbitTilt: number;
+    findingsCount: number;
+    description: string;
+  }> = [
     {
       id: 'core',
       label: `Trust Core (${overallScore})`,
-      role: 'core' as const,
+      role: 'core',
       score: overallScore,
       weight: 100,
       confidence: 93,

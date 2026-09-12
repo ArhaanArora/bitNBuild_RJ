@@ -6,7 +6,7 @@ import { X, Award, Clock, CheckCircle2, FileCode, ShieldAlert, ArrowRight } from
 interface VerificationChallengeModalProps {
   candidate: Candidate | null;
   onClose: () => void;
-  onChallengeSent: (candidateId: string) => void;
+  onChallengeSent: (candidateId: string, skillName: string, message: string) => void;
 }
 
 export default function VerificationChallengeModal({
@@ -24,7 +24,11 @@ export default function VerificationChallengeModal({
   const handleSendChallenge = () => {
     setSubmitting(true);
     setTimeout(() => {
-      onChallengeSent(candidate.id);
+      onChallengeSent(
+        candidate.id,
+        selectedSkill,
+        `Pre-team challenge: Please complete proctored verification for ${selectedSkill}.`
+      );
       toast.success(`Verification challenge on "${selectedSkill}" sent to ${candidate.name}!`);
       setSubmitting(false);
       onClose();

@@ -3,9 +3,12 @@ import { db } from '../db';
 import {
   teams, teamMembers, teamRequests, hackathonParticipants,
   candidateSkills, skills, profiles, users, assessmentSessions, assessments,
+  notifications,
 } from '../db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
+import { MatchingService } from '../services/matching.service';
+import { AuditService } from '../services/audit.service';
 
 export const teamsRouter = Router();
 
@@ -198,3 +201,144 @@ teamsRouter.post('/requests/:id/challenge', requireAuth, async (req, res) => {
 
   res.status(201).json({ sessionId: session.id });
 });
+
+// ─── Hackathon Buddy & Explainable Teammate Matching ──────────────────────────
+
+// POST /api/teams/find-teammates
+teamsRouter.post('/find-teammates', async (req, res) => {
+  try {
+    const currentUserId = (req as any).user?.id;
+    const {
+      requiredSkills,
+      optionalSkills,
+      minCredibilityScore,
+      verifiedOnly,
+      searchQuery,
+      experienceLevel,
+      locationPreference,
+      hackathonId,
+    } = req.body;
+
+    const matches = await MatchingService.findMatches({
+      currentUserId,
+      requiredSkills: Array.isArray(requiredSkills) ? requiredSkills : [],
+      optionalSkills: Array.isArray(optionalSkills) ? optionalSkills : [],
+      minCredibilityScore: Number(minCredibilityScore) || 0,
+      verifiedOnly: Boolean(verifiedOnly),
+      searchQuery: typeof searchQuery === 'string' ? searchQuery : undefined,
+      experienceLevel: typeof experienceLevel === 'string' ? experienceLevel : undefined,
+      locationPreference: typeof locationPreference === 'string' ? locationPreference : undefined,
+      hackathonId: typeof hackathonId === 'string' ? hackathonId : undefined,
+    });
+
+    res.json({ matches });
+  } catch (err: any) {
+    console.error('Error in find-teammates:', err);
+    res.status(500).json({ error: 'Failed to find teammates' });
+  }
+});
+
+// POST /api/teams/direct-invite
+teamsRouter.post('/direct-invite', async (req, res) => {
+  try {
+    let fromUserId = (req as any).user?.id;
+    if (!fromUserId) {
+      const defaultUser = await db.query.users.findFirst({ where: eq(users.email, 'alex@demo.local') });
+      fromUserId = defaultUser?.id;
+    }
+    const { candidateId, teamId, message } = req.body;
+
+    if (!candidateId) {
+      return res.status(400).json({ error: 'candidateId is required' });
+    }
+
+    let targetTeamId = teamId;
+    if (!targetTeamId) {
+      const owned = await db.query.teams.findFirst({ where: eq(teams.ownerId, fromUserId) });
+      if (owned) {
+        targetTeamId = owned.id;
+      } else {
+        const anyTeam = await db.query.teams.findFirst();
+        targetTeamId = anyTeam?.id;
+      }
+    }
+
+    if (!targetTeamId) {
+      return res.status(400).json({ error: 'No active team found to send invite from' });
+    }
+
+    const [request] = await db.insert(teamRequests).values({
+      teamId: targetTeamId,
+      fromUserId,
+      toUserId: candidateId,
+      direction: 'invite',
+      status: 'pending',
+      message: message || 'We would love to have you on our hackathon team based on your verified skills!',
+    }).returning();
+
+    // In-app notification
+    await db.insert(notifications).values({
+      userId: candidateId,
+      type: 'TEAM_INVITE',
+      title: 'Hackathon Team Invitation',
+      message: message || 'You received an invitation to join a hackathon team!',
+      actionUrl: '/teams/requests',
+      metadata: { teamRequestId: request.id, teamId: targetTeamId },
+      isRead: false,
+    });
+
+    // Audit log
+    await AuditService.record({
+      actorId: fromUserId,
+      action: 'TEAM_INVITE_SENT',
+      entityType: 'TEAM_REQUEST',
+      entityId: request.id,
+      details: { toUserId: candidateId, teamId: targetTeamId },
+    });
+
+    res.status(201).json({ success: true, request });
+  } catch (err: any) {
+    console.error('Error sending direct invite:', err);
+    res.status(500).json({ error: 'Failed to send direct invite' });
+  }
+});
+
+// POST /api/teams/direct-challenge
+teamsRouter.post('/direct-challenge', async (req, res) => {
+  try {
+    let fromUserId = (req as any).user?.id;
+    if (!fromUserId) {
+      const defaultUser = await db.query.users.findFirst({ where: eq(users.email, 'alex@demo.local') });
+      fromUserId = defaultUser?.id;
+    }
+    const { candidateId, skillName, message } = req.body;
+
+    if (!candidateId) {
+      return res.status(400).json({ error: 'candidateId is required' });
+    }
+
+    const [notif] = await db.insert(notifications).values({
+      userId: candidateId,
+      type: 'VERIFICATION_REQUEST',
+      title: `Verification Challenge: ${skillName || 'Skill Competency'}`,
+      message: message || `A team has requested proof of competency in ${skillName || 'your claimed skills'}.`,
+      actionUrl: '/assessments',
+      metadata: { skillName, requestedBy: fromUserId },
+      isRead: false,
+    }).returning();
+
+    await AuditService.record({
+      actorId: fromUserId,
+      action: 'VERIFICATION_CHALLENGE_REQUESTED',
+      entityType: 'NOTIFICATION',
+      entityId: notif.id,
+      details: { targetCandidateId: candidateId, skillName },
+    });
+
+    res.status(201).json({ success: true, challengeSent: true });
+  } catch (err: any) {
+    console.error('Error sending direct challenge:', err);
+    res.status(500).json({ error: 'Failed to send challenge' });
+  }
+});
+

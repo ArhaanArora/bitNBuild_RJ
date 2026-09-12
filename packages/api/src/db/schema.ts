@@ -1,10 +1,21 @@
-import { pgTable, text, integer, boolean, timestamp, jsonb, uuid, real, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, timestamp, jsonb, uuid, real, pgEnum, uniqueIndex } from 'drizzle-orm/pg-core';
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
 export const userRoleEnum = pgEnum('user_role', ['candidate', 'organizer', 'recruiter', 'admin']);
 export const skillLevelEnum = pgEnum('skill_level', ['beginner', 'intermediate', 'advanced', 'expert']);
-export const verificationStatusEnum = pgEnum('verification_status', ['UNVERIFIED', 'IN_PROGRESS', 'VERIFIED', 'EXPIRED']);
+export const verificationStatusEnum = pgEnum('verification_status', [
+  'UNVERIFIED',
+  'CLAIMED',
+  'PENDING',
+  'UNDER_REVIEW',
+  'ASSESSMENT_REQUIRED',
+  'ASSESSMENT_FAILED',
+  'VERIFIED',
+  'REVOKED',
+  'EXPIRED',
+  'IN_PROGRESS',
+]);
 export const sessionStatusEnum = pgEnum('session_status', ['NOT_STARTED', 'IN_PROGRESS', 'SUBMITTED', 'EXPIRED']);
 export const questionTypeEnum = pgEnum('question_type', ['mcq', 'short_answer', 'practical']);
 export const integrityEventTypeEnum = pgEnum('integrity_event_type', [
@@ -44,7 +55,11 @@ export const profiles = pgTable('profiles', {
 export const skills = pgTable('skills', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull().unique(),
+  slug: text('slug').notNull().unique(),
   category: text('category'),
+  aliases: jsonb('aliases').$type<string[]>().default([]),
+  description: text('description'),
+  status: text('status').notNull().default('active'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -56,9 +71,15 @@ export const candidateSkills = pgTable('candidate_skills', {
   verificationStatus: verificationStatusEnum('verification_status').notNull().default('UNVERIFIED'),
   verifiedScore: real('verified_score'),
   integrityScore: real('integrity_score'),
+  evidenceNotes: text('evidence_notes'),
+  evidenceUrl: text('evidence_url'),
+  portfolioRating: real('portfolio_rating'),
+  githubStatus: text('github_status'),
   lastVerifiedAt: timestamp('last_verified_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  userSkillIdx: uniqueIndex('candidate_skills_user_skill_idx').on(table.userId, table.skillId),
+}));
 
 // ─── Projects ─────────────────────────────────────────────────────────────────
 
@@ -269,3 +290,71 @@ export const analysisFindings = pgTable('analysis_findings', {
   evidenceSnippet: text('evidence_snippet'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+// ─── Notifications ──────────────────────────────────────────────────────────
+
+export const notificationTypeEnum = pgEnum('notification_type', [
+  'TEAM_INVITE',
+  'TEAM_APPLICATION',
+  'TEAM_ACCEPTED',
+  'TEAM_REJECTED',
+  'VERIFICATION_REQUEST',
+  'VERIFICATION_RESULT',
+  'SYSTEM_ALERT',
+]);
+
+export const notifications = pgTable('notifications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  type: notificationTypeEnum('type').notNull().default('SYSTEM_ALERT'),
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  actionUrl: text('action_url'),
+  metadata: jsonb('metadata'),
+  isRead: boolean('is_read').notNull().default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// ─── Audit Logs ─────────────────────────────────────────────────────────────
+
+export const auditLogs = pgTable('audit_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  actorId: uuid('actor_id').references(() => users.id, { onDelete: 'set null' }),
+  action: text('action').notNull(),
+  entityType: text('entity_type').notNull(),
+  entityId: text('entity_id').notNull(),
+  details: jsonb('details'),
+  ipAddress: text('ip_address'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// ─── Files ──────────────────────────────────────────────────────────────────
+
+export const files = pgTable('files', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  uploaderId: uuid('uploader_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  originalName: text('original_name').notNull(),
+  fileName: text('file_name').notNull(),
+  mimeType: text('mime_type').notNull(),
+  sizeBytes: integer('size_bytes').notNull(),
+  storagePath: text('storage_path').notNull(),
+  publicUrl: text('public_url').notNull(),
+  entityType: text('entity_type'),
+  entityId: text('entity_id'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// ─── Model Types ────────────────────────────────────────────────────────────
+
+export type User = typeof users.$inferSelect;
+export type Profile = typeof profiles.$inferSelect;
+export type Skill = typeof skills.$inferSelect;
+export type CandidateSkill = typeof candidateSkills.$inferSelect;
+export type Project = typeof projects.$inferSelect;
+export type Team = typeof teams.$inferSelect;
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type TeamRequest = typeof teamRequests.$inferSelect;
+export type Notification = typeof notifications.$inferSelect;
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type FileRecord = typeof files.$inferSelect;
+

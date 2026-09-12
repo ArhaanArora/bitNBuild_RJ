@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import NotificationBell from './NotificationBell';
 
 const candidateNav = [
   { to: '/dashboard', icon: '⬡', label: 'Dashboard' },
@@ -8,6 +9,7 @@ const candidateNav = [
   { to: '/skills', icon: '✦', label: 'My Skills' },
   { to: '/projects', icon: '◈', label: 'Projects' },
   { to: '/hackathons', icon: '⚡', label: 'Hackathons' },
+  { to: '/admin', icon: '🛡️', label: 'Admin Audit' },
   { to: '/profile', icon: '◉', label: 'Profile' },
 ];
 
@@ -18,6 +20,7 @@ const organizerNav = [
   { to: '/hackathons', icon: '⚡', label: 'Hackathons' },
   { to: '/organizer/hackathons/new', icon: '+', label: 'New Hackathon' },
   { to: '/organizer/assessments', icon: '◈', label: 'Assessments' },
+  { to: '/admin', icon: '🛡️', label: 'Admin Audit' },
   { to: '/profile', icon: '◉', label: 'Profile' },
 ];
 
@@ -26,6 +29,7 @@ const recruiterNav = [
   { to: '/hackathons/find-teammates', icon: '🤝', label: 'Find Teammates' },
   { to: '/analysis/report', icon: '🌌', label: '3D Constellation' },
   { to: '/recruiter/search', icon: '◎', label: 'Search Candidates' },
+  { to: '/admin', icon: '🛡️', label: 'Admin Audit' },
   { to: '/profile', icon: '◉', label: 'Profile' },
 ];
 
@@ -94,8 +98,27 @@ export default function AppShell() {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 overflow-auto">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+      <main className="flex-1 flex flex-col overflow-auto">
+        {/* Top Header Bar */}
+        <header className="h-14 border-b border-gray-800/80 bg-gray-950/60 backdrop-blur-md px-6 flex items-center justify-between shrink-0 sticky top-0 z-40">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-mono text-gray-400">Neon PostgreSQL Live</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <NotificationBell />
+            <div className="h-4 w-px bg-gray-800" />
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-gray-400 font-medium">{user?.firstName}</span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-gray-900 text-indigo-400 border border-gray-800 capitalize">
+                {user?.role}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <div className="max-w-6xl w-full mx-auto px-6 py-8 flex-1">
           <Outlet />
         </div>
       </main>

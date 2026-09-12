@@ -1,8 +1,11 @@
-import 'dotenv/config';
+import path from 'path';
+import dotenv from 'dotenv';
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import path from 'path';
 
 import { authRouter } from './auth/router';
 import { profilesRouter } from './profiles/router';
@@ -14,6 +17,8 @@ import { hackathonsRouter } from './hackathons/router';
 import { teamsRouter } from './teams/router';
 import { verificationRouter } from './verification/router';
 import { analysisRouter } from './analysis/router';
+import { notificationsRouter } from './notifications/router';
+import { adminRouter } from './admin/router';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -51,6 +56,8 @@ app.use('/api/hackathons', hackathonsRouter);
 app.use('/api/teams', teamsRouter);
 app.use('/api/verification', verificationRouter);
 app.use('/api/analysis', analysisRouter);
+app.use('/api/notifications', notificationsRouter);
+app.use('/api/admin', adminRouter);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date() }));
 
