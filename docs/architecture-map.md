@@ -104,3 +104,17 @@ CLAIMED ──────► UNDER_REVIEW ──────► ASSESSMENT_REQU
   10. `STATIC_TYPING`: TypeScript/typing strictness and coverage.
   11. `INTEGRITY_CHECK`: Anomaly, plagiarism, and obfuscation detection.
   12. `FINAL_JUDGE`: Synthesis into trust score, confidence, and badge.
+
+#### G. Super Admin Command Center (Master v3.0)
+- **Modular Shell**: 12 dedicated operational modules for candidates, recruiters, organizers, client organizations (KYB), users/RBAC, verifications, hackathons & teams, canonical skills, unified inbox, website CMS, live operations, feature flags, and security audit.
+- **Generated ID Standard**: All entities utilize canonical public IDs (`CAND-2026-XXXXXX`, `RECR-2026-XXXXXX`, `ORGN-2026-XXXXXX`, `ORG-2026-XXXXXX`, `HACK-2026-XXXXXX`, `VER-2026-XXXXXX`, `AUD-2026-XXXXXX`, `MSG-2026-XXXXXX`).
+- **Dual Spatial Operations (3D/2D)**: WebGL Three.js spatial service mesh with Green/Yellow/Red node health indicators + authoritative 2D accessible fallback (WCAG 2.2 AA).
+- **Command Palette (`Ctrl+K`)**: Instant keyboard-driven global navigation and action execution.
+- **Self-Healing Automation**: Zero-downtime remediation triggers for cache invalidation, secret rotation, vector re-indexing, and worker restarts.
+
+#### H. Section 20A AI Inference Architecture
+- **Dynamic Task Routing**: Maps platform tasks (`VERIFICATION_DOC`, `MESSAGE_TRIAGE`, `CODE_ANALYSIS`, `CMS_ASSISTANT`, `AUTO_FIX`) to primary LLMs (`gpt-4o`, `claude-3-5-sonnet`, `gpt-4o-mini`) and automated fallback models.
+- **Telemetry & Spend Governance**: Real-time logging of prompt version, input/output tokens, roundtrip latency, dollar cost, and cost ceilings.
+- **Live Drift & Overturn Metrics**: Continuous calculation of human overturn rates and drift indicators.
+- **Strict Human Gating**: Structural separation of AI advisory signals (`ai_verification_notes`, `ai_suggested_response`) from human executive sign-off (`human_decision`, `human_approved`).
+

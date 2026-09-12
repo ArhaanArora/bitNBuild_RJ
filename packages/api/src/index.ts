@@ -59,12 +59,32 @@ app.use('/api/analysis', analysisRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/admin', adminRouter);
 
+import { cmsService } from './services/cms.service';
+
+app.get('/api/public/cms/:slug', async (req, res) => {
+  try {
+    const page = await cmsService.getPublicPageData(req.params.slug);
+    if (!page) return res.status(404).json({ error: 'Page not found' });
+    res.json({ page });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to fetch public CMS data' });
+  }
+});
+
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date() }));
 
 // Global error handler
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Unhandled server error:', err);
   res.status(500).json({ error: err.message || 'Internal Server Error' });
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.warn('Unhandled Rejection detected:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.warn('Uncaught Exception captured:', err.message);
 });
 
 app.listen(PORT, () => {

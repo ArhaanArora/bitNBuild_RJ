@@ -28,6 +28,7 @@ export const requestDirectionEnum = pgEnum('request_direction', ['invite', 'appl
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
+  publicId: text('public_id').unique(),
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   role: userRoleEnum('role').notNull().default('candidate'),
@@ -85,6 +86,7 @@ export const candidateSkills = pgTable('candidate_skills', {
 
 export const projects = pgTable('projects', {
   id: uuid('id').primaryKey().defaultRandom(),
+  publicId: text('public_id').unique(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   description: text('description'),
@@ -195,6 +197,7 @@ export const roughWorkFiles = pgTable('rough_work_files', {
 
 export const hackathons = pgTable('hackathons', {
   id: uuid('id').primaryKey().defaultRandom(),
+  publicId: text('public_id').unique(),
   name: text('name').notNull(),
   description: text('description'),
   organizerId: uuid('organizer_id').notNull().references(() => users.id),
@@ -319,6 +322,7 @@ export const notifications = pgTable('notifications', {
 
 export const auditLogs = pgTable('audit_logs', {
   id: uuid('id').primaryKey().defaultRandom(),
+  publicId: text('public_id'),
   actorId: uuid('actor_id').references(() => users.id, { onDelete: 'set null' }),
   action: text('action').notNull(),
   entityType: text('entity_type').notNull(),
@@ -344,6 +348,121 @@ export const files = pgTable('files', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// ─── Organizations ─────────────────────────────────────────────────────────
+
+export const organizations = pgTable('organizations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  publicId: text('public_id').notNull().unique(),
+  name: text('name').notNull(),
+  type: text('type').notNull().default('Enterprise'),
+  website: text('website'),
+  contactEmail: text('contact_email'),
+  location: text('location'),
+  verificationStatus: text('verification_status').notNull().default('PENDING'),
+  riskScore: real('risk_score').default(10),
+  aiVerificationNotes: jsonb('ai_verification_notes'),
+  humanDecision: text('human_decision').default('PENDING'),
+  reviewedBy: uuid('reviewed_by').references(() => users.id, { onDelete: 'set null' }),
+  reviewedAt: timestamp('reviewed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// ─── Unified Messages & Inquiries (Inbox) ──────────────────────────────────
+
+export const messages = pgTable('messages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  publicId: text('public_id').notNull().unique(),
+  senderId: uuid('sender_id').references(() => users.id, { onDelete: 'set null' }),
+  receiverId: uuid('receiver_id').references(() => users.id, { onDelete: 'set null' }),
+  senderEmail: text('sender_email').notNull(),
+  senderName: text('sender_name').notNull(),
+  subject: text('subject').notNull(),
+  body: text('body').notNull(),
+  category: text('category').notNull().default('SUPPORT'),
+  status: text('status').notNull().default('NEW'),
+  priority: text('priority').notNull().default('NORMAL'),
+  aiTriageNotes: jsonb('ai_triage_notes'),
+  aiSuggestedResponse: text('ai_suggested_response'),
+  humanApproved: boolean('human_approved').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// ─── CMS Pages & Versioning ────────────────────────────────────────────────
+
+export const cmsPages = pgTable('cms_pages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(),
+  content: jsonb('content').notNull(),
+  publishedVersion: integer('published_version').notNull().default(1),
+  status: text('status').notNull().default('PUBLISHED'),
+  updatedBy: uuid('updated_by').references(() => users.id, { onDelete: 'set null' }),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const cmsVersions = pgTable('cms_versions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  pageId: uuid('page_id').notNull().references(() => cmsPages.id, { onDelete: 'cascade' }),
+  versionNumber: integer('version_number').notNull(),
+  content: jsonb('content').notNull(),
+  changeSummary: text('change_summary'),
+  publishedBy: uuid('published_by').references(() => users.id, { onDelete: 'set null' }),
+  publishedAt: timestamp('published_at').defaultNow().notNull(),
+});
+
+// ─── Feature Flags ─────────────────────────────────────────────────────────
+
+export const featureFlags = pgTable('feature_flags', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  key: text('key').notNull().unique(),
+  description: text('description'),
+  enabled: boolean('enabled').notNull().default(true),
+  rolloutPercentage: integer('rollout_percentage').notNull().default(100),
+  environment: text('environment').notNull().default('all'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// ─── AI Model Registry & Inference Logs (Section 20A) ───────────────────────
+
+export const aiModelRegistry = pgTable('ai_model_registry', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  taskType: text('task_type').notNull().unique(),
+  primaryModel: text('primary_model').notNull(),
+  fallbackModel: text('fallback_model').notNull(),
+  latencyBudgetMs: integer('latency_budget_ms').notNull().default(3000),
+  costCeilingCents: integer('cost_ceiling_cents').notNull().default(50),
+  status: text('status').notNull().default('active'),
+});
+
+export const aiInferenceLogs = pgTable('ai_inference_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  agentId: text('agent_id').notNull(),
+  taskType: text('task_type').notNull(),
+  modelUsed: text('model_used').notNull(),
+  promptVersion: text('prompt_version').notNull().default('v1.0'),
+  tokensIn: integer('tokens_in').notNull().default(0),
+  tokensOut: integer('tokens_out').notNull().default(0),
+  latencyMs: integer('latency_ms').notNull().default(0),
+  costDollars: real('cost_dollars').notNull().default(0),
+  status: text('status').notNull().default('SUCCESS'),
+  cached: boolean('cached').notNull().default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// ─── System Incidents & Self-Healing ────────────────────────────────────────
+
+export const systemIncidents = pgTable('system_incidents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: text('title').notNull(),
+  service: text('service').notNull(),
+  severity: text('severity').notNull().default('INFO'),
+  status: text('status').notNull().default('RESOLVED'),
+  timelineJson: jsonb('timeline_json'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  resolvedAt: timestamp('resolved_at'),
+});
+
 // ─── Model Types ────────────────────────────────────────────────────────────
 
 export type User = typeof users.$inferSelect;
@@ -357,4 +476,13 @@ export type TeamRequest = typeof teamRequests.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type FileRecord = typeof files.$inferSelect;
+export type Organization = typeof organizations.$inferSelect;
+export type Message = typeof messages.$inferSelect;
+export type CmsPage = typeof cmsPages.$inferSelect;
+export type CmsVersion = typeof cmsVersions.$inferSelect;
+export type FeatureFlag = typeof featureFlags.$inferSelect;
+export type AiModelRegistry = typeof aiModelRegistry.$inferSelect;
+export type AiInferenceLog = typeof aiInferenceLogs.$inferSelect;
+export type SystemIncident = typeof systemIncidents.$inferSelect;
+
 

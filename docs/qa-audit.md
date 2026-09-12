@@ -6,14 +6,16 @@
 
 | Test Suite | Target | Executed At | Result |
 |---|---|---|---|
-| **Database Migration v2** | Neon PostgreSQL (DDL) | 2026-09-13 02:17 | ✅ Passed (0 errors) |
-| **Database Seeding** | 7 Candidates + 16 Canonical Skills | 2026-09-13 02:21 | ✅ Passed (Exit code 0) |
-| **Backend TypeScript Build** | `@skill-verify/api` (`tsc`) | 2026-09-13 02:23 | ✅ Passed (0 lint/TS errors) |
-| **Frontend TypeScript & Vite** | `@skill-verify/client` (`tsc -b && vite build`) | 2026-09-13 02:27 | ✅ Passed (Bundled in 11.64s) |
-| **Admin Stats API** | `GET /api/admin/stats` | 2026-09-13 02:23 | ✅ Passed (11 users, 19 skills) |
-| **Teammate Matching API** | `POST /api/teams/find-teammates` | 2026-09-13 02:23 | ✅ Passed (8 ranked matches) |
-| **Notifications API** | `GET /api/notifications` | 2026-09-13 02:24 | ✅ Passed (Live unread queue) |
-| **Audit Logs Ledger API** | `GET /api/admin/audit-logs` | 2026-09-13 02:24 | ✅ Passed (Tamper-evident logs) |
+| **Database Migration v3** | Neon PostgreSQL (DDL) | 2026-09-13 03:00 | ✅ Passed (8 new tables + public_id indexes) |
+| **Database Seeding v3** | Real Orgs, CMS, Flags, AI Registry | 2026-09-13 03:14 | ✅ Passed (Exit code 0) |
+| **Backend TypeScript Build** | `@skill-verify/api` (`tsc`) | 2026-09-13 03:15 | ✅ Passed (0 lint/TS errors) |
+| **Frontend TypeScript & Vite** | `@skill-verify/client` (`tsc -b && vite build`) | 2026-09-13 03:19 | ✅ Passed (0 errors, bundled in 6.99s) |
+| **Admin Overview API** | `GET /api/admin/overview` | 2026-09-13 03:20 | ✅ Passed (11 users, 5 orgs, 19 skills) |
+| **Section 20A AI Metrics API**| `GET /api/admin/ai/metrics` | 2026-09-13 03:22 | ✅ Passed (5 models, $0.118 spend, drift 1.4%) |
+| **Client Organizations API** | `GET /api/admin/organizations` | 2026-09-13 03:22 | ✅ Passed (5 vetted/pending orgs) |
+| **Feature Flags API** | `GET /api/admin/feature-flags` | 2026-09-13 03:22 | ✅ Passed (6 active platform flags) |
+| **Public Edge CMS API** | `GET /api/public/cms/home` | 2026-09-13 03:21 | ✅ Passed (Live published JSON) |
+| **Admin Route HTTP Delivery** | `GET http://localhost:6969/admin` | 2026-09-13 03:20 | ✅ Passed (HTTP 200 OK) |
 
 ---
 

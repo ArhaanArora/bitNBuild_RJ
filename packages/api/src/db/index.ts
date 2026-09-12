@@ -10,13 +10,14 @@ import * as schema from './schema';
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
+  max: 10,
+  idleTimeoutMillis: 10000,
+  connectionTimeoutMillis: 15000,
+  allowExitOnIdle: false,
 });
 
 pool.on('error', (err) => {
-  console.error('PostgreSQL pool error:', err);
+  console.warn('PostgreSQL pool idle client warning (reconnecting automatically):', err.message);
 });
 
 export const db = drizzle(pool, { schema });

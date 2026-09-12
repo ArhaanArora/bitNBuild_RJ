@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.0] - 2026-09-13
+
+### Added
+- **AI-Powered Super Admin Command Center (Master Build v2 Refined)**:
+  - 12 comprehensive administrative functional modules unified under a responsive, enterprise `AdminShell`:
+    1. **Overview & Executive Telemetry**: Real PostgreSQL database metrics, priority triage queues for unreviewed claims & pending orgs, server heap/latency health matrix.
+    2. **AI Inference Architecture (Section 20A)**: Task-based model routing (`VERIFICATION_DOC`, `MESSAGE_TRIAGE`, `CODE_ANALYSIS`, `CMS_ASSISTANT`, `AUTO_FIX`), fallback chains, cost ceilings, latency SLAs, live inference logs, token spend tracking, drift calculation, and human overturn rates.
+    3. **Candidates Directory & Passports**: Complete candidate directory with standardized `CAND-2026-XXXXXX` identifiers, verified skill coverage, average scores, and direct public passport inspect links.
+    4. **Recruiters & Partners Directory**: Partner roster with `RECR-2026-XXXXXX` IDs, enterprise company affiliations, and active vetted access permissions.
+    5. **Hackathon Organizers**: Authorized organizer management with `ORGN-2026-XXXXXX` IDs and managed event rosters.
+    6. **Users & Role-Based Access Control (RBAC)**: Comprehensive user directory with immediate role transitions (`candidate`, `recruiter`, `organizer`, `admin`) and immutable audit tracking.
+    7. **Client Organizations & KYB Vetting**: Enterprise onboarding, corporate domain matching, risk scoring, AI verification notes, and human approve/reject/suspend gating with `ORG-2026-XXXXXX` identifiers.
+    8. **Skill Verification Moderation Queue**: Evidence inspector, proctoring adherence signals (98%+ integrity), score overrides, and approve/reject/revoke actions with notifications dispatched to candidates.
+    9. **Hackathons & Formed Teams**: Publication toggling, registration limits, team composition checks, and vector skill balance scoring.
+    10. **Canonical Skills Taxonomy**: Standardized technology dictionary, aliases array mapping, and new canonical skill registration.
+    11. **Unified Inquiries & Communications Inbox**: Incoming candidate appeals and recruiter partnership queries with `MSG-2026-XXXXXX` IDs, AI triage analysis, AI-drafted responses, and 1-click human authorization.
+    12. **Website CMS & Public Sync**: Edge-synchronized JSON content editor for `home`, `announcements`, and `faq`, version history snapshots, 1-click instant rollback, and live preview modal.
+    13. **Live Spatial Operations & Self-Healing**: Dynamic toggle between interactive Three.js 3D spatial node topology and WCAG 2.2 AA accessible 2D matrix, with 4 zero-downtime self-healing triggers (Purge Cache, Rotate GitHub Tokens, Re-index Vectors, Restart Worker Pool).
+    14. **Platform Feature Flags**: Real-time feature flag toggles (`ADMIN_3D_OPERATIONS`, `AI_VERIFICATION_GATE`, `LIVE_METRICS_STREAM`, `CMS_PUBLIC_SYNC`, `AI_AUTO_HEAL`, `TEAM_FORMATION_V2`) and progressive rollout sliders.
+    15. **Cryptographic Audit Trail**: Immutable ledger of all administrative events with `AUD-2026-XXXXXX` identifiers and expandable JSON details drawer.
+  - **Command Palette (`Ctrl+K`)**: Keyboard-first global search modal for instant navigation and quick actions.
+- **Database Schema v3 (Neon PostgreSQL)**:
+  - Added tables: `organizations`, `messages`, `cms_pages`, `cms_versions`, `feature_flags`, `ai_model_registry`, `ai_inference_logs`, `system_incidents`.
+  - Added unique indexed `public_id` columns to `users`, `projects`, `hackathons`, and `audit_logs`.
+- **Public CMS API**:
+  - `GET /api/public/cms/:slug` serving live published CMS content to guest visitors.
+
+---
+
 ## [2.0.0] - 2026-09-13
 
 ### Added
