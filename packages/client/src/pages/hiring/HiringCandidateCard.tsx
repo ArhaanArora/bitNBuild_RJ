@@ -1,5 +1,6 @@
 import React from 'react';
 import { HiringMatch } from '../../types/hiring';
+import VerificationBadge from '../../components/common/VerificationBadge';
 import {
   MapPin,
   CheckCircle2,
@@ -10,8 +11,7 @@ import {
   Bookmark,
   BookmarkCheck,
   MessageSquare,
-  ArrowUpRight,
-  Sparkles,
+  ArrowRight,
   ShieldCheck,
 } from 'lucide-react';
 
@@ -32,30 +32,19 @@ export default function HiringCandidateCard({
 }: HiringCandidateCardProps) {
   const { candidate, matchScore, reasoningBullets } = match;
 
-  // Match badge styling
-  const matchColor =
-    matchScore >= 90
-      ? 'text-emerald-400 bg-emerald-950/80 border-emerald-500/30'
-      : matchScore >= 80
-      ? 'text-indigo-400 bg-indigo-950/80 border-indigo-500/30'
-      : 'text-amber-400 bg-amber-950/80 border-amber-500/30';
-
-  // Generate ASCII-like credibility visual bar: █████████░ 91%
-  const filledBlocks = Math.round(candidate.credibilityScore / 10);
-  const emptyBlocks = Math.max(0, 10 - filledBlocks);
-  const credibilityBar = '█'.repeat(filledBlocks) + '░'.repeat(emptyBlocks);
-
   return (
-    <div className={`card-hover relative flex flex-col justify-between border rounded-2xl p-5 transition-all duration-200 ${
-      candidate.isCurrentUser
-        ? 'border-indigo-500/50 bg-gradient-to-b from-[#0e162d]/90 to-[#0B0F1B]/95 shadow-lg shadow-indigo-950/40'
-        : isShortlisted
-        ? 'border-indigo-700/60 bg-[#0B0F1B]/95 shadow-md shadow-indigo-950/20'
-        : 'border-gray-800 bg-[#0B0F1B]/90'
-    }`}>
+    <div
+      className={`bg-[#17171A] border rounded-xl p-5 flex flex-col justify-between transition-all relative ${
+        candidate.isCurrentUser
+          ? 'border-[#E8672E]/50'
+          : isShortlisted
+          ? 'border-[#38383D]'
+          : 'border-[#2A2A2E] hover:border-[#38383D]'
+      }`}
+    >
       {candidate.isCurrentUser && (
-        <div className="absolute -top-2.5 right-4 px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold tracking-wider uppercase shadow flex items-center gap-1">
-          <Sparkles className="w-3 h-3" /> Your Discoverable Profile
+        <div className="absolute -top-2.5 right-4 px-2.5 py-0.5 rounded-full bg-[#E8672E] text-[#0D0D0F] text-[10px] font-bold tracking-wider uppercase">
+          Your Profile
         </div>
       )}
 
@@ -66,58 +55,60 @@ export default function HiringCandidateCard({
             <img
               src={candidate.avatar}
               alt={candidate.name}
-              className="w-13 h-13 rounded-full object-cover border border-gray-700 shrink-0"
+              className="w-12 h-12 rounded-full object-cover border border-[#2A2A2E] shrink-0"
             />
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3
                   onClick={onViewProfile}
-                  className="font-bold text-white text-base leading-tight hover:text-indigo-300 cursor-pointer transition"
+                  className="font-semibold text-[#F5F5F4] text-base leading-tight hover:text-[#E8672E] cursor-pointer transition"
                 >
                   {candidate.name}
                 </h3>
-                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/20 font-semibold flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                <span className="text-[10px] font-mono text-[#3FB65F] bg-[#16261B] px-2 py-0.5 rounded border border-[#3FB65F]/30 font-medium">
                   {candidate.credibilityScore}% Credibility
                 </span>
               </div>
-              <p className="text-xs text-indigo-400 font-semibold mt-0.5">{candidate.role}</p>
-              <p className="text-[11px] text-gray-400 flex items-center gap-1 mt-0.5">
+              <p className="text-xs text-[#A3A3A8] font-medium mt-0.5">{candidate.role}</p>
+              <p className="text-[11px] text-[#6B6B70] flex items-center gap-1 mt-0.5">
                 <span>🏛️ {candidate.college}</span>
                 <span>·</span>
                 <span className="flex items-center gap-0.5">
-                  <MapPin className="w-3 h-3 text-gray-400" /> {candidate.location}
+                  <MapPin className="w-3 h-3 text-[#6B6B70]" /> {candidate.location}
                 </span>
               </p>
             </div>
           </div>
 
-          {/* Match Score Badge */}
+          {/* Match Score */}
           <div className="text-right shrink-0">
-            <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl border text-xs font-mono font-extrabold ${matchColor}`}>
+            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#2A2A2E] bg-[#1E1E22] text-xs font-mono font-bold text-[#E8672E]">
               <span>{matchScore}%</span>
-              <span className="text-[10px] font-normal uppercase tracking-wider text-gray-400">Match</span>
+              <span className="text-[10px] font-normal uppercase tracking-wider text-[#A3A3A8]">
+                Match
+              </span>
             </div>
-            <div className="text-[10px] text-gray-500 mt-1 font-mono">{candidate.availability}</div>
+            <div className="text-[10px] text-[#6B6B70] mt-1 font-mono">
+              {candidate.availability}
+            </div>
           </div>
         </div>
 
-        {/* Concrete Match Reasoning Bullets (Never bare percentage!) */}
-        <div className="p-3 rounded-xl bg-gray-950/80 border border-gray-800/80 mb-4 space-y-1.5">
-          <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
-            <span>Verified Match Evidence</span>
-            <span className="text-indigo-400 font-mono">Algorithm Score</span>
+        {/* Concrete Match Reasoning Bullets */}
+        <div className="p-3 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] mb-4 space-y-1.5">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-[#6B6B70] mb-1">
+            Matching Evidence
           </div>
           {reasoningBullets.map((bullet, idx) => {
             const isVerified = bullet.startsWith('✓');
             return (
               <div key={idx} className="flex items-start gap-1.5 text-xs">
                 {isVerified ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#3FB65F] shrink-0 mt-0.5" />
                 ) : (
-                  <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                  <AlertCircle className="w-3.5 h-3.5 text-[#D89A3E] shrink-0 mt-0.5" />
                 )}
-                <span className={isVerified ? 'text-gray-300' : 'text-gray-400'}>
+                <span className={isVerified ? 'text-[#D4D4D8]' : 'text-[#A3A3A8]'}>
                   {bullet.replace(/^[✓○]\s*/, '')}
                 </span>
               </div>
@@ -125,125 +116,99 @@ export default function HiringCandidateCard({
           })}
         </div>
 
-        {/* Credibility Architecture Meter */}
-        <div className="p-3 rounded-xl bg-gray-900/50 border border-gray-800/70 mb-4">
-          <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="text-gray-400 font-medium">Credibility Index</span>
-            <span className="font-mono text-emerald-400 font-bold text-xs">{candidate.credibilityScore}%</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="font-mono text-emerald-400 tracking-wider text-sm select-none">
-              {credibilityBar}
-            </div>
-            <span className="text-[11px] text-gray-500 font-mono">Platform Tested</span>
-          </div>
-        </div>
-
-        {/* Triad Proof Signals: Projects, Assessment, GitHub */}
-        <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-gray-900/30 border border-gray-800/50 mb-4 text-center">
+        {/* Triad Proof Signals */}
+        <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] mb-4 text-center">
           <div>
-            <div className="text-xs font-mono font-bold text-emerald-400 flex items-center justify-center gap-1">
+            <div className="text-xs font-mono font-bold text-[#3FB65F] flex items-center justify-center gap-1">
               <FileCheck2 className="w-3.5 h-3.5" /> {candidate.verifiedProjectsCount}
             </div>
-            <div className="text-[10px] text-gray-400 font-medium uppercase tracking-tight">Verified Projects</div>
+            <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Projects</div>
           </div>
           <div>
-            <div className="text-xs font-mono font-bold text-indigo-400 flex items-center justify-center gap-1">
-              <Award className="w-3.5 h-3.5" /> {candidate.assessmentScore}%
+            <div className="text-xs font-mono font-bold text-[#F5F5F4] flex items-center justify-center gap-1">
+              <Award className="w-3.5 h-3.5 text-[#E8672E]" /> {candidate.assessmentScore}%
             </div>
-            <div className="text-[10px] text-gray-400 font-medium uppercase tracking-tight">Assessment</div>
+            <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Assessment</div>
           </div>
           <div>
-            <div className="text-xs font-mono font-bold text-blue-400 flex items-center justify-center gap-1">
+            <div className="text-xs font-mono font-bold text-[#A3A3A8] flex items-center justify-center gap-1">
               <GitBranch className="w-3.5 h-3.5" /> {candidate.githubEvidence}
             </div>
-            <div className="text-[10px] text-gray-400 font-medium uppercase tracking-tight">GitHub Proof</div>
+            <div className="text-[10px] text-[#6B6B70] uppercase font-medium">GitHub</div>
           </div>
         </div>
 
-        {/* Skills: Clear Visual Distinction: Claimed vs. Verified */}
+        {/* Skills: Claimed vs. Verified */}
         <div className="mb-4">
-          <div className="flex items-center justify-between text-[11px] text-gray-400 font-medium mb-1.5">
-            <span>Relevant Skills</span>
-            <span className="text-[10px] font-mono text-gray-400">
-              <span className="text-emerald-400 font-semibold">{candidate.skills.filter((s) => s.status === 'VERIFIED').length} Verified</span>
+          <div className="flex items-center justify-between text-[11px] text-[#6B6B70] font-medium mb-1.5">
+            <span>Key Competencies</span>
+            <span className="font-mono">
+              <span className="text-[#3FB65F]">
+                {candidate.skills.filter((s) => s.status === 'VERIFIED').length} Verified
+              </span>
               {' · '}
-              <span className="text-gray-400">{candidate.skills.filter((s) => s.status === 'CLAIMED').length} Claimed</span>
+              <span className="text-[#A3A3A8]">
+                {candidate.skills.filter((s) => s.status === 'CLAIMED').length} Claimed
+              </span>
             </span>
           </div>
+
           <div className="flex flex-wrap gap-1.5">
-            {candidate.skills.map((skill) => {
-              const isVer = skill.status === 'VERIFIED';
-              return (
-                <span
-                  key={skill.name}
-                  className={`inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-lg border transition-all ${
-                    isVer
-                      ? 'bg-emerald-950/70 text-emerald-300 border-emerald-500/40 shadow-xs'
-                      : 'bg-gray-900/80 text-gray-400 border-gray-700/80'
-                  }`}
-                  title={`${skill.name} — ${isVer ? `Platform Verified (${skill.score || 90}%)` : 'Self-declared Claim'}`}
-                >
-                  {isVer ? (
-                    <span className="text-emerald-400 font-bold">✓</span>
-                  ) : (
-                    <span className="text-gray-500 text-[10px] uppercase font-sans">claim</span>
-                  )}
-                  <span>{skill.name}</span>
-                  {isVer && skill.score && (
-                    <span className="text-[9px] text-emerald-400/80 ml-0.5">{skill.score}%</span>
-                  )}
-                </span>
-              );
-            })}
+            {candidate.skills.map((skill) => (
+              <VerificationBadge
+                key={skill.name}
+                status={skill.status}
+                score={skill.score}
+                showScore={false}
+                className="py-0.5"
+              />
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Card Actions Footer: [ View Profile ] [ Shortlist ] [ Contact ] */}
-      <div className="pt-3 border-t border-gray-800/80 flex flex-wrap items-center justify-between gap-2 mt-2">
+      {/* Card Actions Footer */}
+      <div className="pt-3 border-t border-[#2A2A2E] flex flex-wrap items-center justify-between gap-2 mt-2">
         <button
           type="button"
           onClick={onViewProfile}
-          className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold py-1.5 px-2 hover:bg-indigo-950/40 rounded-lg transition flex items-center gap-1"
+          className="text-xs text-[#F5F5F4] hover:text-[#E8672E] font-medium py-1.5 transition flex items-center gap-1"
         >
           <span>View Profile</span>
-          <ArrowUpRight className="w-3.5 h-3.5" />
+          <ArrowRight className="w-3.5 h-3.5" />
         </button>
 
         <div className="flex items-center gap-2">
-          {/* Idempotent Shortlist Toggle Button */}
+          {/* Shortlist Toggle */}
           <button
             type="button"
             onClick={onToggleShortlist}
             className={`btn-sm text-xs py-1.5 px-3 flex items-center gap-1.5 rounded-lg border transition-all ${
               isShortlisted
-                ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/50 hover:bg-emerald-900/80'
-                : 'btn-ghost border-gray-800 hover:border-gray-700 text-gray-300'
+                ? 'bg-[#16261B] text-[#3FB65F] border-[#3FB65F]/40'
+                : 'btn-ghost'
             }`}
-            title={isShortlisted ? 'Click to remove from shortlist' : 'Add to shortlisted candidates'}
           >
             {isShortlisted ? (
               <>
-                <BookmarkCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>✓ Shortlisted</span>
+                <BookmarkCheck className="w-3.5 h-3.5 text-[#3FB65F]" />
+                <span>Shortlisted</span>
               </>
             ) : (
               <>
-                <Bookmark className="w-3.5 h-3.5 text-gray-400" />
+                <Bookmark className="w-3.5 h-3.5 text-[#A3A3A8]" />
                 <span>Shortlist</span>
               </>
             )}
           </button>
 
-          {/* Contact Modal Trigger */}
+          {/* Contact Trigger */}
           <button
             type="button"
             onClick={onContact}
-            className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-sm shadow-indigo-600/30"
-            title="View Direct Contact Info"
+            className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
           >
-            <MessageSquare className="w-3.5 h-3.5" />
+            <MessageSquare className="w-3.5 h-3.5 text-[#E8672E]" />
             <span>Contact</span>
           </button>
         </div>

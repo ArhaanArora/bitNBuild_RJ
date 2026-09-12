@@ -7,20 +7,17 @@ import {
 } from '../../utils/hiringStorage';
 import { useAuth } from '../../hooks/useAuth';
 import { api } from '../../lib/api';
+import VerificationBadge from '../../components/common/VerificationBadge';
 import {
-  ShieldCheck,
   Upload,
   FileText,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
   Plus,
   Trash2,
-  RefreshCw,
   Eye,
   EyeOff,
   ArrowRight,
-  X,
   FileCheck2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -49,9 +46,6 @@ const COMMON_SKILL_OPTIONS = [
 
 export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewProps) {
   const { user } = useAuth();
-
-  // Load existing profile from storage if available
-  const [existingProfile, setExistingProfile] = useState<UserHiringProfile | null>(null);
   const [isActivated, setIsActivated] = useState(false);
 
   // Form State
@@ -71,11 +65,9 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
   // Discoverability Toggle
   const [discoverability, setDiscoverability] = useState(true);
 
-  // Fetch candidate's platform-verified skills from API or defaults
   useEffect(() => {
     const saved = getUserHiringProfile();
     if (saved && saved.activated) {
-      setExistingProfile(saved);
       setIsActivated(true);
       setSkills(saved.skills);
       setResumeFile(saved.resume);
@@ -83,7 +75,6 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
       return;
     }
 
-    // Pre-populate with user's verified platform skills if fresh
     const loadPlatformSkills = async () => {
       try {
         const res = await api.get('/skills/mine').catch(() => ({ data: [] }));
@@ -99,52 +90,22 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
           }));
           setSkills(preloaded);
         } else {
-          // Default initial set
           setSkills([
-            {
-              name: 'Python',
-              status: 'VERIFIED',
-              score: 95,
-              selfDeclaredProficiency: 'Advanced',
-              evidenceSummary: 'Verified by platform proctored test & code analysis.',
-            },
-            {
-              name: 'React',
-              status: 'VERIFIED',
-              score: 91,
-              selfDeclaredProficiency: 'Advanced',
-              evidenceSummary: 'Verified by automated component profiler.',
-            },
-            {
-              name: 'SQL',
-              status: 'CLAIMED',
-              score: 80,
-              selfDeclaredProficiency: 'Intermediate',
-              evidenceSummary: 'Claimed coursework; assessment pending.',
-            },
+            { name: 'Python', status: 'VERIFIED', score: 95, selfDeclaredProficiency: 'Advanced' },
+            { name: 'React', status: 'VERIFIED', score: 91, selfDeclaredProficiency: 'Advanced' },
+            { name: 'SQL', status: 'CLAIMED', score: 80, selfDeclaredProficiency: 'Intermediate' },
           ]);
         }
       } catch {
         setSkills([
-          {
-            name: 'Python',
-            status: 'VERIFIED',
-            score: 94,
-            selfDeclaredProficiency: 'Advanced',
-          },
-          {
-            name: 'React',
-            status: 'VERIFIED',
-            score: 90,
-            selfDeclaredProficiency: 'Advanced',
-          },
+          { name: 'Python', status: 'VERIFIED', score: 94, selfDeclaredProficiency: 'Advanced' },
+          { name: 'React', status: 'VERIFIED', score: 90, selfDeclaredProficiency: 'Advanced' },
         ]);
       }
     };
     loadPlatformSkills();
   }, []);
 
-  // Add Skill
   const handleAddSkill = (nameToAdd?: string) => {
     const sName = (nameToAdd || newSkillName).trim();
     if (!sName) return;
@@ -154,7 +115,6 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
       return;
     }
 
-    // Determine verification status (matches verified platform skills or marks Claimed)
     const isPlatformVerified = ['python', 'react', 'typescript', 'figma', 'node.js'].includes(
       sName.toLowerCase()
     );
@@ -171,20 +131,18 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
 
     setSkills([...skills, newSkill]);
     setNewSkillName('');
-    toast.success(`Added ${sName} (${newSkill.status === 'VERIFIED' ? 'Verified' : 'Claimed'})`);
+    toast.success(`Added ${sName}`);
   };
 
   const handleRemoveSkill = (skillName: string) => {
     setSkills(skills.filter((s) => s.name !== skillName));
   };
 
-  // Resume File Upload (Section 12 Validation: PDF/DOCX only, 5MB cap)
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     setResumeError(null);
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate type
     const validTypes = [
       'application/pdf',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -202,10 +160,9 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
       return;
     }
 
-    // Validate size (5MB max)
     const maxSizeBytes = 5 * 1024 * 1024;
     if (file.size > maxSizeBytes) {
-      setResumeError(`File size (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds the 5MB maximum limit.`);
+      setResumeError(`File size exceeds the 5MB maximum limit.`);
       toast.error('File exceeds 5MB size limit.');
       return;
     }
@@ -218,11 +175,10 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
         size: file.size,
         lastModified: file.lastModified,
       });
-      toast.success(`✓ Uploaded ${file.name}`);
-    }, 400);
+      toast.success(`Uploaded ${file.name}`);
+    }, 300);
   };
 
-  // Submit Profile (Section 13)
   const handleSubmitProfile = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -244,148 +200,132 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
     };
 
     saveUserHiringProfile(profile);
-    setExistingProfile(profile);
     setIsActivated(true);
     setDiscoverability(true);
-    toast.success("✓ You're now visible to recruiters!");
+    toast.success("You're now visible to recruiters!");
   };
 
-  // Toggle Discoverability ON / OFF (Section 13)
   const handleToggleVisibility = () => {
     const newState = toggleRecruiterDiscoverability();
     setDiscoverability(newState);
-    if (existingProfile) {
-      setExistingProfile({ ...existingProfile, recruiterVisibility: newState });
-    }
     if (newState) {
-      toast.success('🟢 Recruiter Discoverability: ON');
+      toast.success('Recruiter Discoverability: ON');
     } else {
-      toast('⚪ Recruiter Discoverability: OFF (Your profile is hidden)');
+      toast('Recruiter Discoverability: OFF');
     }
   };
 
   const verifiedCount = skills.filter((s) => s.status === 'VERIFIED').length;
-  const claimedCount = skills.filter((s) => s.status === 'CLAIMED').length;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 fade-in-up pb-12">
       {/* Navigation Breadcrumb */}
-      <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="flex items-center justify-between text-xs">
         <button
           type="button"
           onClick={onBack}
-          className="text-gray-400 hover:text-white flex items-center gap-1.5 transition"
+          className="text-[#A3A3A8] hover:text-[#F5F5F4] flex items-center gap-1.5 transition"
         >
           <span>← Back to Hiring Dashboard</span>
         </button>
-        <span className="text-emerald-400 font-mono">Candidate Onboarding</span>
+        <span className="text-[#E8672E] font-medium">Candidate Onboarding</span>
       </div>
 
       {/* Confirmation View: Activated & Visible (Section 13) */}
       {isActivated ? (
-        <div className="card border-emerald-500/40 bg-gradient-to-br from-[#081711] via-[#0B0F1B] to-[#0a1122] p-6 sm:p-8 rounded-2xl shadow-2xl space-y-6">
-          <div className="flex items-start justify-between gap-4">
+        <div className="bg-[#17171A] border border-[#2A2A2E] p-6 sm:p-8 rounded-xl space-y-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 bottom-0 w-[2px] bg-[#3FB65F]" />
+
+          <div className="flex items-start justify-between gap-4 pl-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                <CheckCircle2 className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-lg bg-[#16261B] border border-[#3FB65F]/30 flex items-center justify-center text-[#3FB65F]">
+                <CheckCircle2 className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-extrabold text-white">
-                  ✓ You're now visible to recruiters
+                <h2 className="text-xl font-semibold text-[#F5F5F4]">
+                  You&apos;re now visible to recruiters
                 </h2>
-                <p className="text-xs text-emerald-400 font-medium mt-0.5">
+                <p className="text-xs text-[#3FB65F] font-medium mt-0.5">
                   Your profile and verified evidence are discoverable in the hiring marketplace.
                 </p>
               </div>
             </div>
 
-            {/* Recruiter Visibility Toggle Switch (Section 13) */}
+            {/* Recruiter Visibility Toggle Switch */}
             <button
               type="button"
               onClick={handleToggleVisibility}
-              className={`text-xs py-2 px-3 rounded-xl border flex items-center gap-2 font-mono font-bold transition shadow-sm ${
+              className={`text-xs py-1.5 px-3 rounded-lg border flex items-center gap-2 font-mono font-medium transition ${
                 discoverability
-                  ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/50 hover:bg-emerald-900/80'
-                  : 'bg-gray-900 text-gray-400 border-gray-700 hover:border-gray-600'
+                  ? 'bg-[#16261B] text-[#3FB65F] border-[#3FB65F]/40'
+                  : 'bg-[#1E1E22] text-[#A3A3A8] border-[#2A2A2E]'
               }`}
             >
               {discoverability ? (
                 <>
-                  <Eye className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>🟢 Discoverability: ON</span>
+                  <Eye className="w-3.5 h-3.5 text-[#3FB65F]" />
+                  <span>Discoverability: ON</span>
                 </>
               ) : (
                 <>
-                  <EyeOff className="w-3.5 h-3.5 text-gray-400" />
-                  <span>⚪ Discoverability: OFF</span>
+                  <EyeOff className="w-3.5 h-3.5 text-[#A3A3A8]" />
+                  <span>Discoverability: OFF</span>
                 </>
               )}
             </button>
           </div>
 
-          {/* Profile Metrics Summary Chips (Section 13 Copy) */}
-          <div className="p-4 rounded-xl bg-gray-950/70 border border-gray-800/80 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+          {/* Profile Metrics Summary Chips */}
+          <div className="p-4 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
             <div>
               <div className="text-xl font-bold font-mono text-white">{skills.length}</div>
-              <div className="text-[10px] text-gray-400 uppercase font-medium">Total Skills</div>
+              <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Total Skills</div>
             </div>
             <div>
-              <div className="text-xl font-bold font-mono text-emerald-400">{verifiedCount}</div>
-              <div className="text-[10px] text-gray-400 uppercase font-medium">Verified Skills</div>
+              <div className="text-xl font-bold font-mono text-[#3FB65F]">{verifiedCount}</div>
+              <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Verified Skills</div>
             </div>
             <div>
-              <div className="text-xl font-bold font-mono text-indigo-400">1</div>
-              <div className="text-[10px] text-gray-400 uppercase font-medium">Resume</div>
+              <div className="text-xl font-bold font-mono text-[#E8672E]">1</div>
+              <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Resume</div>
             </div>
             <div>
-              <div className="text-xl font-bold font-mono text-blue-400">2</div>
-              <div className="text-[10px] text-gray-400 uppercase font-medium">Projects</div>
+              <div className="text-xl font-bold font-mono text-[#A3A3A8]">2</div>
+              <div className="text-[10px] text-[#6B6B70] uppercase font-medium">Projects</div>
             </div>
           </div>
 
-          {/* Skills Breakdown in Active Profile */}
+          {/* Skills Breakdown */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-              Active Candidate Competencies
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#A3A3A8]">
+              Active Competencies
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {skills.map((s) => (
                 <div
                   key={s.name}
-                  className={`p-2.5 rounded-xl border flex items-center justify-between ${
-                    s.status === 'VERIFIED'
-                      ? 'bg-emerald-950/20 border-emerald-500/30'
-                      : 'bg-gray-950/50 border-gray-800'
-                  }`}
+                  className="p-3 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] flex items-center justify-between"
                 >
                   <div>
-                    <span className="font-bold text-white text-xs block">{s.name}</span>
-                    <span className="text-[10px] text-gray-400 font-mono">
+                    <span className="font-medium text-[#F5F5F4] text-xs block">{s.name}</span>
+                    <span className="text-[10px] text-[#6B6B70]">
                       Self-declared: {s.selfDeclaredProficiency || 'Advanced'}
                     </span>
                   </div>
-                  <span
-                    className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
-                      s.status === 'VERIFIED'
-                        ? 'bg-emerald-950 text-emerald-300 border-emerald-500/30'
-                        : 'bg-gray-900 text-gray-400 border-gray-700'
-                    }`}
-                  >
-                    {s.status === 'VERIFIED' ? '✓ Verified' : 'Claimed'}
-                  </span>
+                  <VerificationBadge status={s.status} />
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Uploaded Resume Widget */}
+          {/* Uploaded Resume */}
           {resumeFile && (
-            <div className="p-3.5 rounded-xl bg-gray-950/60 border border-gray-800 flex items-center justify-between">
+            <div className="p-3.5 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <FileText className="w-5 h-5 text-indigo-400" />
+                <FileText className="w-4 h-4 text-[#E8672E]" />
                 <div>
-                  <span className="text-xs font-semibold text-white block">{resumeFile.name}</span>
-                  <span className="text-[10px] text-gray-500 font-mono">
+                  <span className="text-xs font-medium text-white block">{resumeFile.name}</span>
+                  <span className="text-[10px] text-[#6B6B70] font-mono">
                     {Math.round(resumeFile.size / 1024)} KB · Uploaded & Active
                   </span>
                 </div>
@@ -393,7 +333,7 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
               <button
                 type="button"
                 onClick={() => setIsActivated(false)}
-                className="btn-ghost btn-sm text-xs border-gray-700 text-gray-300"
+                className="btn-ghost text-xs py-1 px-2.5"
               >
                 Replace
               </button>
@@ -401,29 +341,28 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
           )}
 
           {/* Action CTAs */}
-          <div className="pt-4 border-t border-gray-800 flex flex-wrap items-center justify-between gap-3">
+          <div className="pt-4 border-t border-[#2A2A2E] flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
               onClick={onViewDiscovery}
-              className="btn-primary text-xs py-2.5 px-5 flex items-center gap-2 shadow-lg shadow-indigo-600/30"
+              className="btn-primary text-xs py-2 px-4 flex items-center gap-2"
             >
-              <Eye className="w-4 h-4" />
               <span>View In Recruiter Discovery</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
 
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setIsActivated(false)}
-                className="btn-ghost text-xs py-2.5 px-4 border-gray-700 text-gray-300"
+                className="btn-secondary text-xs py-2 px-3"
               >
                 Edit Profile & Skills
               </button>
               <button
                 type="button"
                 onClick={onBack}
-                className="btn-ghost text-xs py-2.5 px-4 border-gray-700 text-gray-400 hover:text-white"
+                className="btn-ghost text-xs py-2 px-3"
               >
                 Back to Hiring
               </button>
@@ -432,65 +371,59 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
         </div>
       ) : (
         /* Form Setup: Skills & Resume (Sections 10, 11, 12) */
-        <div className="card border-indigo-900/40 bg-gradient-to-br from-[#0a0f1d] via-[#0B0F1B] to-[#080c18] p-6 sm:p-8 rounded-2xl shadow-2xl space-y-6">
-          {/* Header */}
-          <div className="border-b border-gray-800 pb-5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-2">
-              <Sparkles className="w-3.5 h-3.5" /> Recruiter Radar Activation
+        <div className="bg-[#17171A] border border-[#2A2A2E] p-6 sm:p-8 rounded-xl space-y-6">
+          <div className="border-b border-[#2A2A2E] pb-5">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E8672E] tracking-wider uppercase mb-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E8672E]" />
+              <span>RECRUITER RADAR ACTIVATION</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h2 className="text-2xl font-semibold text-[#F5F5F4] tracking-tight">
               Get yourself noticed.
             </h2>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-xs sm:text-sm text-[#A3A3A8] mt-1">
               Add your skills and resume to become discoverable by recruiters looking for verified talent.
             </p>
           </div>
 
           <form onSubmit={handleSubmitProfile} className="space-y-6">
             {/* Section 11: Skills Input */}
-            <div className="p-5 rounded-xl bg-gray-950/70 border border-gray-800 space-y-4">
+            <div className="p-5 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-white">Your Skills</h3>
-                  <p className="text-[11px] text-gray-400">
+                  <h3 className="text-sm font-semibold text-white">Your Skills</h3>
+                  <p className="text-[11px] text-[#A3A3A8]">
                     Self-declare your proficiency level. Platform verification is attached automatically.
                   </p>
                 </div>
-                <span className="text-xs font-mono text-indigo-400">
+                <span className="text-xs font-mono text-[#E8672E]">
                   {skills.length} skills added
                 </span>
               </div>
 
-              {/* Skills List with Self-declared vs Platform Verification */}
+              {/* Skills List */}
               <div className="space-y-2">
                 {skills.map((skill) => (
                   <div
                     key={skill.name}
-                    className="p-3 rounded-xl bg-gray-900/70 border border-gray-800 flex items-center justify-between gap-3"
+                    className="p-3 rounded-lg bg-[#17171A] border border-[#2A2A2E] flex items-center justify-between gap-3"
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-white text-xs sm:text-sm">{skill.name}</span>
-                        <span className="text-[10px] text-gray-400 font-mono">
-                          Self-declared: <strong className="text-indigo-300">{skill.selfDeclaredProficiency || 'Advanced'}</strong>
+                        <span className="font-semibold text-white text-xs sm:text-sm">{skill.name}</span>
+                        <span className="text-[10px] text-[#A3A3A8] font-mono">
+                          Self-declared: <strong className="text-white">{skill.selfDeclaredProficiency || 'Advanced'}</strong>
                         </span>
                       </div>
-                      <div className="text-[11px] text-gray-400 font-mono mt-0.5 flex items-center gap-1.5">
+                      <div className="text-[11px] text-[#6B6B70] font-mono mt-0.5 flex items-center gap-1.5">
                         <span>Platform verification:</span>
-                        {skill.status === 'VERIFIED' ? (
-                          <span className="text-emerald-400 font-semibold flex items-center gap-0.5">
-                            <CheckCircle2 className="w-3 h-3" /> Verified ({skill.score || 92}%)
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 font-semibold">Claimed</span>
-                        )}
+                        <VerificationBadge status={skill.status} score={skill.score} />
                       </div>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => handleRemoveSkill(skill.name)}
-                      className="text-gray-500 hover:text-red-400 p-1.5 transition"
+                      className="text-[#6B6B70] hover:text-[#E0554E] p-1.5 transition"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -499,8 +432,8 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
               </div>
 
               {/* Add Skill Controls */}
-              <div className="pt-3 border-t border-gray-800/80 space-y-3">
-                <span className="text-xs font-semibold text-gray-300 block">Add Skill</span>
+              <div className="pt-3 border-t border-[#2A2A2E] space-y-3">
+                <span className="text-xs font-medium text-[#A3A3A8] block">Add Skill</span>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <input
                     type="text"
@@ -527,7 +460,7 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
                         key={opt}
                         type="button"
                         onClick={() => handleAddSkill(opt)}
-                        className="text-[11px] font-mono px-2 py-0.5 rounded bg-gray-900 text-gray-400 border border-gray-800 hover:border-indigo-500 hover:text-white transition"
+                        className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#17171A] text-[#A3A3A8] border border-[#2A2A2E] hover:border-[#38383D] hover:text-white transition"
                       >
                         + {opt}
                       </button>
@@ -538,7 +471,7 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
                     type="button"
                     onClick={() => handleAddSkill()}
                     disabled={!newSkillName.trim()}
-                    className="btn-ghost btn-sm text-xs border-indigo-700 hover:border-indigo-500 text-indigo-300 disabled:opacity-50"
+                    className="btn-secondary text-xs disabled:opacity-50"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Add Skill</span>
@@ -548,36 +481,35 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
             </div>
 
             {/* Section 12: Resume Upload */}
-            <div className="p-5 rounded-xl bg-gray-950/70 border border-gray-800 space-y-3">
+            <div className="p-5 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-white">Upload your resume</h3>
-                  <p className="text-[11px] text-gray-400">
+                  <h3 className="text-sm font-semibold text-white">Upload your resume</h3>
+                  <p className="text-[11px] text-[#A3A3A8]">
                     PDF or DOCX format (max 5MB). Recruiters will view this alongside your verified benchmarks.
                   </p>
                 </div>
                 {resumeFile && (
-                  <span className="text-xs font-mono text-emerald-400 flex items-center gap-1">
+                  <span className="text-xs font-mono text-[#3FB65F] flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5" /> Resume uploaded
                   </span>
                 )}
               </div>
 
               {resumeFile ? (
-                /* Uploaded View */
-                <div className="p-4 rounded-xl bg-gray-900/80 border border-emerald-500/30 flex items-center justify-between">
+                <div className="p-4 rounded-lg bg-[#17171A] border border-[#3FB65F]/30 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-950 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                      <FileCheck2 className="w-5 h-5" />
+                    <div className="w-9 h-9 rounded-lg bg-[#16261B] border border-[#3FB65F]/30 flex items-center justify-center text-[#3FB65F]">
+                      <FileCheck2 className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-xs font-bold text-white block">{resumeFile.name}</span>
-                      <span className="text-[10px] text-gray-400 font-mono">
+                      <span className="text-xs font-semibold text-white block">{resumeFile.name}</span>
+                      <span className="text-[10px] text-[#6B6B70] font-mono">
                         {(resumeFile.size / (1024 * 1024)).toFixed(2)} MB · Ready for recruiters
                       </span>
                     </div>
                   </div>
-                  <label className="btn-ghost btn-sm text-xs border-gray-700 text-gray-300 cursor-pointer">
+                  <label className="btn-ghost text-xs py-1.5 px-3 cursor-pointer">
                     <span>Replace</span>
                     <input
                       type="file"
@@ -588,13 +520,12 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
                   </label>
                 </div>
               ) : (
-                /* Drag & Drop Upload Zone */
-                <label className="border-2 border-dashed border-gray-700 hover:border-indigo-500 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition bg-gray-900/30 hover:bg-gray-900/60 block">
-                  <Upload className="w-8 h-8 text-indigo-400 mb-2" />
-                  <span className="text-xs font-semibold text-white block">
+                <label className="border-2 border-dashed border-[#2A2A2E] hover:border-[#E8672E] rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition bg-[#17171A] block">
+                  <Upload className="w-6 h-6 text-[#A3A3A8] mb-2" />
+                  <span className="text-xs font-medium text-[#F5F5F4] block">
                     {uploading ? 'Processing resume...' : 'Click or drag file to upload your resume'}
                   </span>
-                  <span className="text-[11px] text-gray-500 font-mono mt-0.5">
+                  <span className="text-[11px] text-[#6B6B70] font-mono mt-0.5">
                     PDF / DOCX · Max 5MB
                   </span>
                   <input
@@ -607,29 +538,27 @@ export default function GetHiredView({ onBack, onViewDiscovery }: GetHiredViewPr
                 </label>
               )}
 
-              {/* Inline Validation Error (Section 12) */}
               {resumeError && (
-                <div className="p-3 rounded-lg bg-red-950/50 border border-red-500/40 text-xs text-red-300 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                <div className="p-3 rounded-lg bg-[#2A1717] border border-[#E0554E]/40 text-xs text-[#E0554E] flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{resumeError}</span>
                 </div>
               )}
             </div>
 
-            {/* Submit Action (Section 12 CTA) */}
-            <div className="pt-4 border-t border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <p className="text-xs text-gray-500">
-                By clicking submit, your profile and verified proof will become discoverable by employers. You can toggle visibility off anytime.
+            {/* Submit Action */}
+            <div className="pt-4 border-t border-[#2A2A2E] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <p className="text-xs text-[#6B6B70]">
+                By submitting, your profile will become discoverable by employers. You can toggle visibility off anytime.
               </p>
 
               <button
                 type="submit"
                 disabled={skills.length === 0}
-                className="btn-primary text-sm py-2.5 px-6 shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shrink-0"
+                className="btn-primary text-xs py-2.5 px-5 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shrink-0"
               >
-                <Sparkles className="w-4 h-4 text-indigo-200" />
                 <span>Start Getting Hired</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </form>

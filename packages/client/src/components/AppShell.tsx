@@ -1,130 +1,262 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import NotificationBell from './NotificationBell';
+import {
+  Home,
+  CheckSquare,
+  FolderKanban,
+  Rocket,
+  Briefcase,
+  Users,
+  UserCheck,
+  User,
+  Search,
+  ChevronDown,
+  Shield,
+  LogOut,
+  Sparkles,
+} from 'lucide-react';
 
-const candidateNav = [
-  { to: '/dashboard', icon: '⬡', label: 'Dashboard' },
-  { to: '/hackathons/find-teammates', icon: '🤝', label: 'Find Teammates' },
-  { to: '/hiring', icon: '💼', label: 'Hiring' },
-  { to: '/analysis/report', icon: '🌌', label: '3D Constellation' },
-  { to: '/skills', icon: '✦', label: 'My Skills' },
-  { to: '/projects', icon: '◈', label: 'Projects' },
-  { to: '/hackathons', icon: '⚡', label: 'Hackathons' },
-  { to: '/admin', icon: '🛡️', label: 'Admin Audit' },
-  { to: '/profile', icon: '◉', label: 'Profile' },
-];
+interface NavItem {
+  to: string;
+  label: string;
+  icon: React.ElementType;
+  section?: string;
+}
 
-const organizerNav = [
-  { to: '/dashboard', icon: '⬡', label: 'Dashboard' },
-  { to: '/hackathons/find-teammates', icon: '🤝', label: 'Find Teammates' },
-  { to: '/hiring', icon: '💼', label: 'Hiring' },
-  { to: '/analysis/report', icon: '🌌', label: '3D Constellation' },
-  { to: '/hackathons', icon: '⚡', label: 'Hackathons' },
-  { to: '/organizer/hackathons/new', icon: '+', label: 'New Hackathon' },
-  { to: '/organizer/assessments', icon: '◈', label: 'Assessments' },
-  { to: '/admin', icon: '🛡️', label: 'Admin Audit' },
-  { to: '/profile', icon: '◉', label: 'Profile' },
-];
-
-const recruiterNav = [
-  { to: '/dashboard', icon: '⬡', label: 'Dashboard' },
-  { to: '/hiring', icon: '💼', label: 'Hiring' },
-  { to: '/hackathons/find-teammates', icon: '🤝', label: 'Find Teammates' },
-  { to: '/analysis/report', icon: '🌌', label: '3D Constellation' },
-  { to: '/recruiter/search', icon: '◎', label: 'Search Candidates' },
-  { to: '/admin', icon: '🛡️', label: 'Admin Audit' },
-  { to: '/profile', icon: '◉', label: 'Profile' },
+const navItems: NavItem[] = [
+  { to: '/dashboard', label: 'Home', icon: Home, section: 'HOME' },
+  { to: '/skills', label: 'My Skills', icon: CheckSquare, section: 'PROFILE' },
+  { to: '/projects', label: 'My Projects', icon: FolderKanban },
+  { to: '/hackathons', label: 'Hackathons', icon: Rocket, section: 'OPPORTUNITIES' },
+  { to: '/hiring', label: 'Hiring', icon: Briefcase },
+  { to: '/hackathons/find-teammates', label: 'Find Teammates', icon: Users, section: 'DISCOVER' },
+  { to: '/recruiter/search', label: 'Find Talent', icon: UserCheck },
+  { to: '/profile', label: 'Profile', icon: User, section: 'ACCOUNT' },
 ];
 
 export default function AppShell() {
-  const { user, switchRole } = useAuth();
+  const { user, switchRole, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
-  const nav = user?.role === 'organizer' ? organizerNav
-    : user?.role === 'recruiter' ? recruiterNav
-    : candidateNav;
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    navigate(`/recruiter/search?q=${encodeURIComponent(searchQuery.trim())}`);
+  };
+
+  const initials = `${user?.firstName?.[0] || 'A'}${user?.lastName?.[0] || 'C'}`.toUpperCase();
 
   return (
-    <div className="flex min-h-screen bg-gray-950">
-      {/* Sidebar */}
-      <aside className="w-60 shrink-0 bg-gray-900 border-r border-gray-800 flex flex-col py-6">
-        {/* Logo */}
-        <div className="px-5 mb-8">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">SV</div>
-            <span className="font-bold text-white">SkillVerify</span>
+    <div className="flex min-h-screen bg-[#0D0D0F] text-[#F5F5F4]">
+      {/* Sidebar (Fixed ~240px) */}
+      <aside className="w-60 shrink-0 bg-[#0D0D0F] border-r border-[#2A2A2E] flex flex-col justify-between py-6 px-4">
+        <div>
+          {/* Brand Header */}
+          <div className="px-2 mb-8">
+            <NavLink to="/dashboard" className="inline-block group">
+              <div className="text-xl font-bold tracking-tight">
+                <span className="text-[#F5F5F4]">Skill</span>
+                <span className="text-[#E8672E]">Verify</span>
+              </div>
+              <p className="text-[11px] text-[#6B6B70] tracking-wide mt-0.5">
+                Skills. Proof. Opportunities.
+              </p>
+            </NavLink>
           </div>
-          <div className="mt-3 px-1">
-            <p className="text-xs text-gray-500">Signed in as</p>
-            <p className="text-xs font-medium text-gray-300 truncate">{user?.firstName} {user?.lastName}</p>
-            <span className="text-xs text-indigo-400 capitalize">{user?.role}</span>
-          </div>
+
+          {/* Grouped Intent Navigation */}
+          <nav className="space-y-1">
+            {navItems.map((item, idx) => {
+              const Icon = item.icon;
+              const isActive =
+                item.to === '/dashboard'
+                  ? location.pathname === '/dashboard' || location.pathname === '/'
+                  : location.pathname.startsWith(item.to);
+
+              const showDivider =
+                item.section &&
+                idx > 0 &&
+                (item.section === 'OPPORTUNITIES' ||
+                  item.section === 'DISCOVER' ||
+                  item.section === 'ACCOUNT');
+
+              return (
+                <React.Fragment key={item.to}>
+                  {showDivider && (
+                    <div className="my-3 border-t border-[#1E1E22]" />
+                  )}
+
+                  <NavLink
+                    to={item.to}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all relative ${
+                      isActive
+                        ? 'bg-[#241C16] text-[#F5F5F4] border-l-2 border-[#E8672E] rounded-l-none'
+                        : 'text-[#A3A3A8] hover:text-[#F5F5F4] hover:bg-[#17171A]'
+                    }`}
+                  >
+                    <Icon
+                      className={`w-4 h-4 shrink-0 transition-colors ${
+                        isActive ? 'text-[#E8672E]' : 'text-[#A3A3A8]'
+                      }`}
+                    />
+                    <span>{item.label}</span>
+                  </NavLink>
+                </React.Fragment>
+              );
+            })}
+          </nav>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 space-y-0.5">
-          {nav.map(({ to, icon, label }) => (
-            <NavLink key={to} to={to} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              <span className="text-base">{icon}</span>
-              <span>{label}</span>
-            </NavLink>
-          ))}
-        </nav>
-
-        {/* Role Switcher */}
-        <div className="px-3 pt-3 border-t border-gray-800">
-          <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold px-2 mb-1.5">View As Role</p>
-          <div className="grid grid-cols-3 gap-1 bg-gray-950 p-1 rounded-lg border border-gray-800">
-            <button
-              type="button"
-              onClick={() => { switchRole('candidate'); navigate('/dashboard'); }}
-              className={`py-1 text-[11px] rounded font-medium transition ${user?.role === 'candidate' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}
-            >
-              Candidate
-            </button>
-            <button
-              type="button"
-              onClick={() => { switchRole('recruiter'); navigate('/dashboard'); }}
-              className={`py-1 text-[11px] rounded font-medium transition ${user?.role === 'recruiter' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}
-            >
-              Recruiter
-            </button>
-            <button
-              type="button"
-              onClick={() => { switchRole('organizer'); navigate('/dashboard'); }}
-              className={`py-1 text-[11px] rounded font-medium transition ${user?.role === 'organizer' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}
-            >
-              Organizer
-            </button>
+        {/* Sidebar Bottom Promo Card (Reference Image) */}
+        <div className="mt-8 pt-4">
+          <div className="bg-[#17171A] border border-[#2A2A2E] rounded-xl p-3.5 relative overflow-hidden">
+            <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#E8672E]" />
+            <p className="text-xs text-[#A3A3A8] leading-relaxed font-normal pl-1">
+              Build a credible profile. Unlock real opportunities.
+            </p>
           </div>
         </div>
       </aside>
 
-      {/* Main */}
-      <main className="flex-1 flex flex-col overflow-auto">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header Bar */}
-        <header className="h-14 border-b border-gray-800/80 bg-gray-950/60 backdrop-blur-md px-6 flex items-center justify-between shrink-0 sticky top-0 z-40">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-mono text-gray-400">Neon PostgreSQL Live</span>
-          </div>
+        <header className="h-16 border-b border-[#2A2A2E] bg-[#0D0D0F] px-8 flex items-center justify-between gap-6 shrink-0 sticky top-0 z-30">
+          {/* Search Input Bar */}
+          <form onSubmit={handleSearchSubmit} className="flex-1 max-w-xl">
+            <div className="relative flex items-center">
+              <Search className="w-4 h-4 text-[#6B6B70] absolute left-3.5 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for people, skills, projects, or opportunities..."
+                className="w-full bg-[#17171A] border border-[#2A2A2E] rounded-xl pl-10 pr-4 py-2 text-xs text-[#F5F5F4] placeholder-[#6B6B70] focus:outline-none focus:border-[#E8672E] transition-all"
+              />
+            </div>
+          </form>
 
-          <div className="flex items-center gap-3">
-            <NotificationBell />
-            <div className="h-4 w-px bg-gray-800" />
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-gray-400 font-medium">{user?.firstName}</span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-gray-900 text-indigo-400 border border-gray-800 capitalize">
-                {user?.role}
-              </span>
+          {/* Right Header Navigation & Avatar */}
+          <div className="flex items-center gap-6 shrink-0">
+            {/* Slogan Breadcrumb Tags (Reference Image) */}
+            <div className="hidden xl:flex items-center gap-2 text-[11px] font-semibold text-[#6B6B70] tracking-widest uppercase select-none">
+              <span>LEARN</span>
+              <span className="text-[#38383D]">/</span>
+              <span>BUILD</span>
+              <span className="text-[#38383D]">/</span>
+              <span>VERIFY</span>
+              <span className="text-[#38383D]">/</span>
+              <span>CONNECT</span>
+            </div>
+
+            {/* Notification Bell */}
+            <div className="text-[#A3A3A8] hover:text-white transition">
+              <NotificationBell />
+            </div>
+
+            {/* User Avatar Capsule Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-[#17171A] transition text-left"
+              >
+                <div className="w-8 h-8 rounded-full bg-[#2A2A2E] border border-[#38383D] flex items-center justify-center text-xs font-semibold text-[#F5F5F4]">
+                  {initials}
+                </div>
+                <div className="hidden sm:block">
+                  <div className="text-xs font-semibold text-[#F5F5F4] leading-tight">
+                    {user?.firstName} {user?.lastName}
+                  </div>
+                  <div className="text-[11px] text-[#A3A3A8] capitalize leading-tight">
+                    {user?.role || 'Candidate'}
+                  </div>
+                </div>
+                <ChevronDown className="w-3.5 h-3.5 text-[#6B6B70]" />
+              </button>
+
+              {/* User Dropdown Menu */}
+              {userDropdownOpen && (
+                <div
+                  className="absolute right-0 mt-2 w-52 bg-[#17171A] border border-[#2A2A2E] rounded-xl shadow-2xl py-2 z-50 animate-fade-in"
+                  onClick={() => setUserDropdownOpen(false)}
+                >
+                  <div className="px-3 py-2 border-b border-[#2A2A2E]">
+                    <p className="text-xs font-semibold text-white">
+                      {user?.firstName} {user?.lastName}
+                    </p>
+                    <p className="text-[11px] text-[#A3A3A8] truncate">{user?.email}</p>
+                  </div>
+
+                  {/* Role Switcher */}
+                  <div className="px-3 py-2 border-b border-[#2A2A2E]">
+                    <span className="text-[10px] font-semibold text-[#6B6B70] uppercase tracking-wider block mb-1.5">
+                      Switch Role
+                    </span>
+                    <div className="grid grid-cols-3 gap-1 bg-[#1E1E22] p-1 rounded-lg">
+                      {(['candidate', 'recruiter', 'organizer'] as const).map((r) => (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            switchRole(r);
+                            setUserDropdownOpen(false);
+                          }}
+                          className={`py-1 text-[10px] font-medium capitalize rounded transition ${
+                            user?.role === r
+                              ? 'bg-[#E8672E] text-[#0D0D0F] font-semibold'
+                              : 'text-[#A3A3A8] hover:text-white'
+                          }`}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="py-1">
+                    <NavLink
+                      to="/profile"
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs text-[#A3A3A8] hover:text-white hover:bg-[#1E1E22]"
+                    >
+                      <User className="w-3.5 h-3.5" />
+                      <span>Edit Profile</span>
+                    </NavLink>
+                    <NavLink
+                      to="/admin"
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs text-[#A3A3A8] hover:text-white hover:bg-[#1E1E22]"
+                    >
+                      <Shield className="w-3.5 h-3.5" />
+                      <span>Admin Audit</span>
+                    </NavLink>
+                    <button
+                      type="button"
+                      onClick={() => logout()}
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[#E0554E] hover:bg-[#2A1717] text-left"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>
 
-        <div className="max-w-6xl w-full mx-auto px-6 py-8 flex-1">
-          <Outlet />
-        </div>
-      </main>
+        {/* Page Content Container */}
+        <main className="flex-1 overflow-y-auto px-8 py-8">
+          <div className="max-w-7xl mx-auto">
+            <Outlet />
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

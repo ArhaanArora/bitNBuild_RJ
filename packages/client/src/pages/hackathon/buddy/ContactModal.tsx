@@ -22,11 +22,11 @@ export default function ContactModal({ candidate, onClose }: ContactModalProps) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm fade-in">
-      <div className="relative w-full max-w-md bg-[#0B0F1B] rounded-2xl border border-gray-800 shadow-2xl overflow-hidden p-6">
+      <div className="relative w-full max-w-md bg-[#17171A] rounded-2xl border border-[#2A2A2E] shadow-2xl overflow-hidden p-6">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white p-1 rounded-lg hover:bg-gray-800 transition"
+          className="absolute top-4 right-4 text-[#A3A3A8] hover:text-[#F5F5F4] p-1 rounded-lg hover:bg-[#1E1E22] transition"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
@@ -34,84 +34,84 @@ export default function ContactModal({ candidate, onClose }: ContactModalProps) 
 
         {/* Header with Privacy Shield */}
         <div className="flex items-start gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-[#241C16] border border-[#E8672E]/30 flex items-center justify-center text-[#E8672E] shrink-0">
             <Lock className="w-5 h-5" />
           </div>
           <div>
-            <div className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/20 mb-1">
-              <ShieldCheck className="w-3 h-3" /> Privacy-Protected Direct Contact
+            <div className="inline-flex items-center gap-1 text-[11px] font-mono text-[#3FB65F] bg-[#16261B] px-2 py-0.5 rounded border border-[#3FB65F]/20 mb-1">
+              <ShieldCheck className="w-3 h-3" /> Verified Contact
             </div>
-            <h3 className="text-lg font-bold text-white">Connect with {candidate.name}</h3>
-            <p className="text-xs text-gray-400">{candidate.role} · {candidate.college}</p>
+            <h3 className="text-lg font-bold text-[#F5F5F4]">Connect with {candidate.name}</h3>
+            <p className="text-xs text-[#A3A3A8]">{candidate.role} · {candidate.college}</p>
           </div>
         </div>
 
-        <p className="text-xs text-gray-300 leading-relaxed mb-5 bg-gray-900/50 p-3 rounded-xl border border-gray-800">
-          This contact information is securely provided to coordinate hackathon team formation. Candidate prefers{' '}
-          <strong className="text-indigo-400">{candidate.contact.preferred}</strong> for quick communication.
+        <p className="text-xs text-[#A3A3A8] leading-relaxed mb-5 bg-[#1E1E22] p-3 rounded-xl border border-[#2A2A2E]">
+          Contact information is shared to coordinate hackathon team formation. Candidate prefers{' '}
+          <strong className="text-[#E8672E]">{candidate.contact.preferred}</strong> for communication.
         </p>
 
         {/* Contact list */}
         <div className="space-y-3 mb-6">
           {/* Discord */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-gray-950 border border-gray-800/80">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-[#1E1E22] border border-[#2A2A2E]">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-indigo-900/30 flex items-center justify-center text-indigo-400">
+              <div className="w-8 h-8 rounded-lg bg-[#241C16] border border-[#E8672E]/20 flex items-center justify-center text-[#E8672E]">
                 <MessageSquare className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[11px] text-gray-400 font-medium">Discord Handle</p>
-                <p className="text-xs font-mono font-semibold text-white">{candidate.contact.discord}</p>
+                <p className="text-[11px] text-[#6B6B70] font-medium">Discord Handle</p>
+                <p className="text-xs font-mono font-semibold text-[#F5F5F4]">{candidate.contact.discord}</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => copyToClipboard(candidate.contact.discord, 'Discord handle')}
-              className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition"
+              className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-[#17171A] hover:bg-[#2A2A2E] text-[#A3A3A8] hover:text-[#F5F5F4] border border-[#2A2A2E] transition"
             >
-              {copiedField === 'Discord handle' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              {copiedField === 'Discord handle' ? <Check className="w-3.5 h-3.5 text-[#3FB65F]" /> : <Copy className="w-3.5 h-3.5 text-[#6B6B70]" />}
               <span>{copiedField === 'Discord handle' ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
 
           {/* Email */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-gray-950 border border-gray-800/80">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-[#1E1E22] border border-[#2A2A2E]">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-900/30 flex items-center justify-center text-emerald-400">
+              <div className="w-8 h-8 rounded-lg bg-[#16261B] border border-[#3FB65F]/20 flex items-center justify-center text-[#3FB65F]">
                 <Mail className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[11px] text-gray-400 font-medium">Verified Email</p>
-                <p className="text-xs font-mono font-semibold text-white">{candidate.contact.email}</p>
+                <p className="text-[11px] text-[#6B6B70] font-medium">Verified Email</p>
+                <p className="text-xs font-mono font-semibold text-[#F5F5F4]">{candidate.contact.email}</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => copyToClipboard(candidate.contact.email, 'Email')}
-              className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition"
+              className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-[#17171A] hover:bg-[#2A2A2E] text-[#A3A3A8] hover:text-[#F5F5F4] border border-[#2A2A2E] transition"
             >
-              {copiedField === 'Email' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              {copiedField === 'Email' ? <Check className="w-3.5 h-3.5 text-[#3FB65F]" /> : <Copy className="w-3.5 h-3.5 text-[#6B6B70]" />}
               <span>{copiedField === 'Email' ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
 
           {/* Phone */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-gray-950 border border-gray-800/80">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-[#1E1E22] border border-[#2A2A2E]">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-blue-900/30 flex items-center justify-center text-blue-400">
+              <div className="w-8 h-8 rounded-lg bg-[#241C16] border border-[#E8672E]/20 flex items-center justify-center text-[#E8672E]">
                 <Phone className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[11px] text-gray-400 font-medium">Direct Phone</p>
-                <p className="text-xs font-mono font-semibold text-white">{candidate.contact.phone}</p>
+                <p className="text-[11px] text-[#6B6B70] font-medium">Direct Phone</p>
+                <p className="text-xs font-mono font-semibold text-[#F5F5F4]">{candidate.contact.phone}</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => copyToClipboard(candidate.contact.phone, 'Phone number')}
-              className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition"
+              className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-[#17171A] hover:bg-[#2A2A2E] text-[#A3A3A8] hover:text-[#F5F5F4] border border-[#2A2A2E] transition"
             >
-              {copiedField === 'Phone number' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              {copiedField === 'Phone number' ? <Check className="w-3.5 h-3.5 text-[#3FB65F]" /> : <Copy className="w-3.5 h-3.5 text-[#6B6B70]" />}
               <span>{copiedField === 'Phone number' ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
@@ -120,7 +120,7 @@ export default function ContactModal({ candidate, onClose }: ContactModalProps) 
         <button
           type="button"
           onClick={onClose}
-          className="w-full btn-primary py-2 text-xs font-semibold"
+          className="w-full btn-primary py-2.5 text-xs font-semibold"
         >
           Done
         </button>

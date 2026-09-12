@@ -27,33 +27,33 @@ export default function ProfileEditor() {
   };
 
   return (
-    <div className="max-w-xl mx-auto space-y-6 fade-in-up">
-      <h1 className="text-2xl font-bold text-white">Edit Profile</h1>
+    <div className="max-w-xl mx-auto space-y-6 fade-in-up pb-12">
+      <h1 className="text-2xl font-bold text-[#F5F5F4]">Edit Profile</h1>
 
       {/* Photo */}
-      <div className="card flex items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-indigo-700 flex items-center justify-center text-2xl font-bold text-white overflow-hidden">
-          {profile?.photoUrl ? <img src={profile.photoUrl} alt="photo" className="w-full h-full object-cover" /> : `${profile?.firstName?.[0]}${profile?.lastName?.[0]}`}
+      <div className="card flex items-center gap-4 border border-[#2A2A2E] bg-[#17171A]">
+        <div className="w-16 h-16 rounded-full bg-[#241C16] border border-[#E8672E]/30 flex items-center justify-center text-xl font-bold text-[#E8672E] overflow-hidden">
+          {profile?.photoUrl ? <img src={profile.photoUrl} alt="photo" className="w-full h-full object-cover" /> : `${profile?.firstName?.[0] || 'A'}${profile?.lastName?.[0] || 'C'}`}
         </div>
         <div>
-          <p className="text-sm font-medium text-white">{profile?.firstName} {profile?.lastName}</p>
-          <label className="text-xs text-indigo-400 cursor-pointer hover:underline mt-1 inline-block">
+          <p className="text-sm font-medium text-[#F5F5F4]">{profile?.firstName} {profile?.lastName}</p>
+          <label className="text-xs text-[#E8672E] cursor-pointer hover:underline mt-1 inline-block">
             Change photo <input type="file" accept="image/*" className="sr-only" onChange={uploadPhoto} />
           </label>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(save)} className="card space-y-4">
+      <form onSubmit={handleSubmit(save)} className="card space-y-4 border border-[#2A2A2E] bg-[#17171A]">
         <div className="grid grid-cols-2 gap-3">
-          <div><label className="label">First name</label><input {...register('firstName')} className="input" /></div>
-          <div><label className="label">Last name</label><input {...register('lastName')} className="input" /></div>
+          <div><label className="label text-xs text-[#A3A3A8]">First name</label><input {...register('firstName')} className="input text-xs" /></div>
+          <div><label className="label text-xs text-[#A3A3A8]">Last name</label><input {...register('lastName')} className="input text-xs" /></div>
         </div>
-        <div><label className="label">Bio</label><textarea {...register('bio')} rows={3} className="input" placeholder="Brief description of yourself…" /></div>
-        <div><label className="label">Education</label><input {...register('education')} className="input" placeholder="B.Tech CS, 2024" /></div>
-        <div><label className="label">LinkedIn URL</label><input {...register('linkedinUrl')} className="input" placeholder="https://linkedin.com/in/…" /></div>
-        <div><label className="label">GitHub URL</label><input {...register('githubUrl')} className="input" placeholder="https://github.com/…" /></div>
-        <div><label className="label">Portfolio URL</label><input {...register('portfolioUrl')} className="input" placeholder="https://…" /></div>
-        <button type="submit" disabled={!isDirty} className="btn-primary w-full">Save Changes</button>
+        <div><label className="label text-xs text-[#A3A3A8]">Bio</label><textarea {...register('bio')} rows={3} className="input text-xs" placeholder="Brief description of yourself…" /></div>
+        <div><label className="label text-xs text-[#A3A3A8]">Education</label><input {...register('education')} className="input text-xs" placeholder="B.Tech CS, 2024" /></div>
+        <div><label className="label text-xs text-[#A3A3A8]">LinkedIn URL</label><input {...register('linkedinUrl')} className="input text-xs" placeholder="https://linkedin.com/in/…" /></div>
+        <div><label className="label text-xs text-[#A3A3A8]">GitHub URL</label><input {...register('githubUrl')} className="input text-xs" placeholder="https://github.com/…" /></div>
+        <div><label className="label text-xs text-[#A3A3A8]">Portfolio URL</label><input {...register('portfolioUrl')} className="input text-xs" placeholder="https://…" /></div>
+        <button type="submit" disabled={!isDirty} className="btn-primary w-full py-2.5 text-xs font-semibold">Save Changes</button>
       </form>
     </div>
   );

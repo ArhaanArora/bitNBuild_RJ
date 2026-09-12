@@ -197,23 +197,23 @@ export default function FindTeammatePage() {
     <div className="space-y-8 fade-in-up pb-12">
       {/* Breadcrumbs & Header */}
       <div>
-        <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-          <Link to="/dashboard" className="hover:text-gray-300">Dashboard</Link>
+        <div className="flex items-center gap-2 text-xs text-[#6B6B70] mb-2">
+          <Link to="/dashboard" className="hover:text-[#A3A3A8]">Dashboard</Link>
           <span>/</span>
-          <Link to="/hackathons" className="hover:text-gray-300">Hackathons</Link>
+          <Link to="/hackathons" className="hover:text-[#A3A3A8]">Hackathons</Link>
           <span>/</span>
-          <span className="text-indigo-400 font-medium">Find Teammates</span>
+          <span className="text-[#E8672E] font-medium">Find Teammates</span>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#16261B] border border-[#3FB65F]/20 text-[#3FB65F] text-xs font-semibold uppercase tracking-wider mb-2">
               <ShieldCheck className="w-3.5 h-3.5" /> Evidence-Based Teammate Matching
             </div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-3xl font-extrabold text-[#F5F5F4] tracking-tight">
               Find Your Hackathon Teammate
             </h1>
-            <p className="text-sm text-gray-400 mt-1 max-w-2xl">
+            <p className="text-sm text-[#A3A3A8] mt-1 max-w-2xl">
               Build your team with people whose skills are backed by assessment scores, portfolio benchmarks, and GitHub validation — not just self-declared claims.
             </p>
           </div>
@@ -221,9 +221,9 @@ export default function FindTeammatePage() {
           <div className="flex items-center gap-2">
             <Link
               to="/analysis/report"
-              className="btn-ghost text-xs flex items-center gap-1.5 border-gray-800 hover:border-gray-700 py-2.5 px-3.5"
+              className="btn-ghost text-xs flex items-center gap-1.5 border-[#2A2A2E] text-[#A3A3A8] hover:text-[#F5F5F4] py-2.5 px-3.5"
             >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              <Sparkles className="w-3.5 h-3.5 text-[#E8672E]" />
               <span>3D Trust Constellation</span>
             </Link>
           </div>
@@ -231,19 +231,19 @@ export default function FindTeammatePage() {
       </div>
 
       {/* Fast, Single-Screen Requirement Form */}
-      <div className="card border-indigo-900/40 bg-gradient-to-br from-gray-900/90 via-[#0B0F1B] to-gray-950 p-6 rounded-2xl shadow-xl space-y-5">
-        <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-          <div className="flex items-center gap-2 text-white font-semibold text-sm">
-            <Search className="w-4 h-4 text-indigo-400" />
+      <div className="card border border-[#2A2A2E] bg-[#17171A] p-6 rounded-2xl shadow-xl space-y-5">
+        <div className="flex items-center justify-between border-b border-[#2A2A2E] pb-3">
+          <div className="flex items-center gap-2 text-[#F5F5F4] font-semibold text-sm">
+            <Search className="w-4 h-4 text-[#E8672E]" />
             <span>Define Required Role & Verified Competencies</span>
           </div>
-          <span className="text-xs text-gray-500 font-mono">Realtime Evidence Scoring</span>
+          <span className="text-xs text-[#6B6B70] font-mono">Evidence-Weighted Match</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Role Needed */}
           <div>
-            <label className="label text-xs font-semibold text-gray-300">Role Needed</label>
+            <label className="label text-xs font-semibold text-[#A3A3A8]">Role Needed</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
@@ -260,7 +260,7 @@ export default function FindTeammatePage() {
 
           {/* Hackathon Selection */}
           <div>
-            <label className="label text-xs font-semibold text-gray-300">Target Hackathon</label>
+            <label className="label text-xs font-semibold text-[#A3A3A8]">Target Hackathon</label>
             <select
               value={hackathon}
               onChange={(e) => setHackathon(e.target.value)}
@@ -276,7 +276,7 @@ export default function FindTeammatePage() {
 
           {/* Experience Level */}
           <div>
-            <label className="label text-xs font-semibold text-gray-300">Experience Level</label>
+            <label className="label text-xs font-semibold text-[#A3A3A8]">Experience Level</label>
             <select
               value={experienceLevel}
               onChange={(e) => setExperienceLevel(e.target.value)}
@@ -291,7 +291,7 @@ export default function FindTeammatePage() {
 
           {/* Location / Radius */}
           <div>
-            <label className="label text-xs font-semibold text-gray-300">Location Filter</label>
+            <label className="label text-xs font-semibold text-[#A3A3A8]">Location Filter</label>
             <select
               value={locationPreference}
               onChange={(e) => setLocationPreference(e.target.value)}
@@ -309,14 +309,14 @@ export default function FindTeammatePage() {
         {/* Required Skills Multi-Select Chips */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="label text-xs font-semibold text-gray-300 mb-0">
-              Required Skills <span className="text-gray-500 font-normal">(Candidates scored on assessment proof)</span>
+            <label className="label text-xs font-semibold text-[#A3A3A8] mb-0">
+              Required Skills <span className="text-[#6B6B70] font-normal">(Ranked against proctored verification)</span>
             </label>
             {requiredSkills.length > 0 && (
               <button
                 type="button"
                 onClick={() => setRequiredSkills([])}
-                className="text-[11px] text-gray-500 hover:text-gray-300"
+                className="text-[11px] text-[#6B6B70] hover:text-[#A3A3A8]"
               >
                 Clear all
               </button>
@@ -333,12 +333,12 @@ export default function FindTeammatePage() {
                   onClick={() => toggleSkill(skill)}
                   className={`text-xs px-3 py-1.5 rounded-lg font-mono transition flex items-center gap-1.5 ${
                     isSelected
-                      ? 'bg-indigo-600 text-white font-semibold shadow-sm border border-indigo-400/30'
-                      : 'bg-gray-950 text-gray-400 hover:text-white border border-gray-800 hover:border-gray-700'
+                      ? 'bg-[#E8672E] text-[#0D0D0F] font-semibold border border-[#E8672E]'
+                      : 'bg-[#1E1E22] text-[#A3A3A8] hover:text-[#F5F5F4] border border-[#2A2A2E] hover:border-[#38383D]'
                   }`}
                 >
                   <span>{skill}</span>
-                  {isSelected && <X className="w-3 h-3 text-indigo-200" />}
+                  {isSelected && <X className="w-3 h-3 text-[#0D0D0F]" />}
                 </button>
               );
             })}
@@ -356,7 +356,7 @@ export default function FindTeammatePage() {
             <button
               type="submit"
               disabled={!customSkillInput.trim()}
-              className="btn-ghost text-xs py-1.5 px-3 border-gray-800 disabled:opacity-40"
+              className="btn-ghost text-xs py-1.5 px-3 border-[#2A2A2E] text-[#A3A3A8] disabled:opacity-40"
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
@@ -364,21 +364,21 @@ export default function FindTeammatePage() {
         </div>
 
         {/* Action Row */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-gray-800">
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Showing teammates near you (Patiala, Chandigarh, Jaipur, BITS)</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-[#2A2A2E]">
+          <div className="flex items-center gap-2 text-xs text-[#A3A3A8]">
+            <MapPin className="w-3.5 h-3.5 text-[#3FB65F]" />
+            <span>Showing candidate network (Patiala, Chandigarh, Jaipur, BITS)</span>
           </div>
 
           <button
             type="button"
             onClick={handleSearch}
             disabled={loading}
-            className="btn-primary py-2.5 px-6 text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20"
+            className="btn-primary py-2.5 px-6 text-xs font-bold flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-[#0D0D0F] border-t-transparent rounded-full animate-spin" />
                 <span>Finding Teammates…</span>
               </>
             ) : (
@@ -393,11 +393,11 @@ export default function FindTeammatePage() {
       </div>
 
       {/* Filter & Sort Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-900/60 p-3.5 rounded-xl border border-gray-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#17171A] p-3.5 rounded-xl border border-[#2A2A2E]">
         {/* Role Chips Filter */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
-          <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mr-1 shrink-0 flex items-center gap-1">
-            <Filter className="w-3 h-3 text-indigo-400" /> Filter:
+          <span className="text-xs text-[#6B6B70] font-semibold uppercase tracking-wider mr-1 shrink-0 flex items-center gap-1">
+            <Filter className="w-3 h-3 text-[#E8672E]" /> Filter:
           </span>
           {['All', 'UI/UX', 'Frontend', 'Backend', 'AI/ML', 'Full-Stack'].map((f) => (
             <button
@@ -406,8 +406,8 @@ export default function FindTeammatePage() {
               onClick={() => setActiveRoleFilter(f)}
               className={`text-xs px-2.5 py-1 rounded-lg font-medium transition shrink-0 ${
                 activeRoleFilter === f
-                  ? 'bg-indigo-600 text-white font-semibold'
-                  : 'text-gray-400 hover:text-white bg-gray-950/60 hover:bg-gray-800'
+                  ? 'bg-[#241C16] border border-[#E8672E] text-[#F5F5F4] font-semibold'
+                  : 'text-[#A3A3A8] hover:text-[#F5F5F4] bg-[#1E1E22] hover:bg-[#2A2A2E] border border-[#2A2A2E]'
               }`}
             >
               {f}
@@ -417,12 +417,12 @@ export default function FindTeammatePage() {
 
         {/* Sort Control */}
         <div className="flex items-center gap-2 shrink-0">
-          <SlidersHorizontal className="w-3.5 h-3.5 text-gray-400" />
-          <span className="text-xs text-gray-400 font-medium">Sort by:</span>
+          <SlidersHorizontal className="w-3.5 h-3.5 text-[#6B6B70]" />
+          <span className="text-xs text-[#A3A3A8] font-medium">Sort by:</span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="bg-gray-950 text-xs text-gray-200 border border-gray-800 rounded-lg py-1 px-2.5 focus:outline-none focus:border-indigo-500 font-medium"
+            className="bg-[#1E1E22] text-xs text-[#F5F5F4] border border-[#2A2A2E] rounded-lg py-1 px-2.5 focus:outline-none focus:border-[#E8672E] font-medium"
           >
             <option value="match">Best Match Score</option>
             <option value="credibility">Highest Overall Credibility</option>
@@ -436,39 +436,33 @@ export default function FindTeammatePage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-white text-lg">Ranked Teammate Matches</h3>
-            <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-gray-800 text-gray-300">
+            <h3 className="font-bold text-[#F5F5F4] text-lg">Ranked Teammate Matches</h3>
+            <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-[#1E1E22] text-[#A3A3A8] border border-[#2A2A2E]">
               {candidateMatches.length} candidates
             </span>
-            {isFromDatabase && (
-              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Live PostgreSQL Verified
-              </span>
-            )}
           </div>
-          <span className="text-xs text-gray-400 font-mono hidden sm:inline">
-            Ranked by: Skill Match + Assessment + Portfolio + GitHub Evidence
+          <span className="text-xs text-[#6B6B70] font-mono hidden sm:inline">
+            Ranked by: Skill Match + Assessment + Portfolio + Code Audit
           </span>
         </div>
 
         {/* Loading State */}
         {loading && (
-          <div className="card text-center py-16 border-dashed border-gray-800">
-            <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-sm text-gray-300 font-medium">Finding teammates with verified skills…</p>
-            <p className="text-xs text-gray-500 mt-1 font-mono">Cross-referencing proctored benchmarks and code provenance</p>
+          <div className="card text-center py-16 border-dashed border-[#2A2A2E] bg-[#17171A]">
+            <div className="w-8 h-8 border-2 border-[#E8672E] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-[#F5F5F4] font-medium">Finding teammates with verified skills…</p>
+            <p className="text-xs text-[#6B6B70] mt-1 font-mono">Cross-referencing benchmarks and code provenance</p>
           </div>
         )}
 
         {/* Empty State */}
         {!loading && candidateMatches.length === 0 && (
-          <div className="card text-center py-16 border-dashed border-gray-800 space-y-3">
-            <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 mx-auto">
+          <div className="card text-center py-16 border-dashed border-[#2A2A2E] bg-[#17171A] space-y-3">
+            <div className="w-12 h-12 rounded-full bg-[#1E1E22] flex items-center justify-center text-[#A3A3A8] mx-auto border border-[#2A2A2E]">
               <Users className="w-6 h-6" />
             </div>
-            <h4 className="text-base font-bold text-white">No strong matches found.</h4>
-            <p className="text-xs text-gray-400 max-w-md mx-auto">
+            <h4 className="text-base font-bold text-[#F5F5F4]">No strong matches found.</h4>
+            <p className="text-xs text-[#A3A3A8] max-w-md mx-auto">
               Try expanding your required skills, resetting the role filter, or choosing "All Locations" to see more candidates.
             </p>
             <button
@@ -478,7 +472,7 @@ export default function FindTeammatePage() {
                 setActiveRoleFilter('All');
                 setRequiredSkills([]);
               }}
-              className="btn-ghost text-xs mt-2"
+              className="btn-ghost text-xs mt-2 border-[#2A2A2E] text-[#A3A3A8] hover:text-[#F5F5F4]"
             >
               Reset Search Parameters
             </button>

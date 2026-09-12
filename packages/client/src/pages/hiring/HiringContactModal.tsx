@@ -40,38 +40,38 @@ export default function HiringContactModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
       <div
-        className="relative w-full max-w-md rounded-2xl bg-[#0e1424] border border-indigo-900/60 shadow-2xl p-6 overflow-hidden"
+        className="relative w-full max-w-md rounded-2xl bg-[#17171A] border border-[#2A2A2E] shadow-2xl p-6 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-start justify-between pb-4 border-b border-gray-800">
+        <div className="flex items-start justify-between pb-4 border-b border-[#2A2A2E]">
           <div className="flex items-center gap-3">
             <img
               src={candidate.avatar}
               alt={candidate.name}
-              className="w-12 h-12 rounded-full object-cover border border-indigo-500/40"
+              className="w-12 h-12 rounded-full object-cover border border-[#2A2A2E]"
             />
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-bold text-white">Connect with {candidate.name}</h3>
+                <h3 className="text-lg font-bold text-[#F5F5F4]">Connect with {candidate.name}</h3>
               </div>
-              <p className="text-xs text-indigo-400 font-medium">{candidate.role}</p>
+              <p className="text-xs text-[#E8672E] font-medium">{candidate.role}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition"
+            className="p-1 rounded-lg text-[#A3A3A8] hover:text-[#F5F5F4] hover:bg-[#1E1E22] transition"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Consent & Privacy Notice (Section 9) */}
-        <div className="my-4 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/20 flex items-start gap-2.5">
-          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-          <div className="text-xs text-gray-300 leading-relaxed">
-            <span className="font-semibold text-emerald-300 block mb-0.5">Verified Recruiter Access</span>
+        {/* Consent & Privacy Notice */}
+        <div className="my-4 p-3 rounded-xl bg-[#16261B] border border-[#3FB65F]/20 flex items-start gap-2.5">
+          <ShieldCheck className="w-4 h-4 text-[#3FB65F] shrink-0 mt-0.5" />
+          <div className="text-xs text-[#A3A3A8] leading-relaxed">
+            <span className="font-semibold text-[#3FB65F] block mb-0.5">Verified Recruiter Access</span>
             Contact details are shared with explicit candidate consent when they activate the Get Hired visibility flow on SkillVerify.
           </div>
         </div>
@@ -79,27 +79,27 @@ export default function HiringContactModal({
         {/* Contact Fields List */}
         <div className="space-y-3 my-4">
           {/* Email */}
-          <div className="p-3 rounded-xl bg-gray-950/80 border border-gray-800 flex items-center justify-between gap-3">
+          <div className="p-3 rounded-xl bg-[#1E1E22] border border-[#2A2A2E] flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 overflow-hidden">
-              <Mail className="w-4 h-4 text-indigo-400 shrink-0" />
+              <Mail className="w-4 h-4 text-[#E8672E] shrink-0" />
               <div className="truncate">
-                <span className="text-[10px] text-gray-400 block uppercase font-mono">Email Address</span>
-                <span className="text-sm font-medium text-white select-all">{contact.email}</span>
+                <span className="text-[10px] text-[#6B6B70] block uppercase font-mono">Email Address</span>
+                <span className="text-sm font-medium text-[#F5F5F4] select-all">{contact.email}</span>
               </div>
             </div>
             <button
               type="button"
               onClick={() => copyToClipboard(contact.email, 'Email')}
-              className="btn-ghost btn-sm text-xs flex items-center gap-1 shrink-0 py-1.5 px-2.5 border-gray-700"
+              className="btn-ghost text-xs flex items-center gap-1 shrink-0 py-1.5 px-2.5 border-[#2A2A2E] text-[#A3A3A8] hover:text-[#F5F5F4]"
             >
               {copiedField === 'Email' ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-emerald-400">Copied</span>
+                  <Check className="w-3.5 h-3.5 text-[#3FB65F]" />
+                  <span className="text-[#3FB65F]">Copied</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-3.5 h-3.5 text-gray-400" />
+                  <Copy className="w-3.5 h-3.5 text-[#6B6B70]" />
                   <span>Copy</span>
                 </>
               )}
@@ -107,27 +107,27 @@ export default function HiringContactModal({
           </div>
 
           {/* Phone */}
-          <div className="p-3 rounded-xl bg-gray-950/80 border border-gray-800 flex items-center justify-between gap-3">
+          <div className="p-3 rounded-xl bg-[#1E1E22] border border-[#2A2A2E] flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 overflow-hidden">
-              <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
+              <Phone className="w-4 h-4 text-[#3FB65F] shrink-0" />
               <div className="truncate">
-                <span className="text-[10px] text-gray-400 block uppercase font-mono">Phone Number</span>
-                <span className="text-sm font-medium text-white select-all">{contact.phone}</span>
+                <span className="text-[10px] text-[#6B6B70] block uppercase font-mono">Phone Number</span>
+                <span className="text-sm font-medium text-[#F5F5F4] select-all">{contact.phone}</span>
               </div>
             </div>
             <button
               type="button"
               onClick={() => copyToClipboard(contact.phone, 'Phone')}
-              className="btn-ghost btn-sm text-xs flex items-center gap-1 shrink-0 py-1.5 px-2.5 border-gray-700"
+              className="btn-ghost text-xs flex items-center gap-1 shrink-0 py-1.5 px-2.5 border-[#2A2A2E] text-[#A3A3A8] hover:text-[#F5F5F4]"
             >
               {copiedField === 'Phone' ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-emerald-400">Copied</span>
+                  <Check className="w-3.5 h-3.5 text-[#3FB65F]" />
+                  <span className="text-[#3FB65F]">Copied</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-3.5 h-3.5 text-gray-400" />
+                  <Copy className="w-3.5 h-3.5 text-[#6B6B70]" />
                   <span>Copy</span>
                 </>
               )}
@@ -136,15 +136,15 @@ export default function HiringContactModal({
 
           {/* Preferred Channel & Availability */}
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="p-2.5 rounded-xl bg-gray-950/60 border border-gray-800">
-              <span className="text-[10px] text-gray-400 uppercase font-mono block">Preferred Contact</span>
-              <span className="font-semibold text-indigo-300 mt-0.5 block flex items-center gap-1">
-                <MessageSquare className="w-3.5 h-3.5" /> {contact.preferred}
+            <div className="p-2.5 rounded-xl bg-[#1E1E22] border border-[#2A2A2E]">
+              <span className="text-[10px] text-[#6B6B70] uppercase font-mono block">Preferred Contact</span>
+              <span className="font-semibold text-[#F5F5F4] mt-0.5 block flex items-center gap-1">
+                <MessageSquare className="w-3.5 h-3.5 text-[#E8672E]" /> {contact.preferred}
               </span>
             </div>
-            <div className="p-2.5 rounded-xl bg-gray-950/60 border border-gray-800">
-              <span className="text-[10px] text-gray-400 uppercase font-mono block">Availability</span>
-              <span className="font-semibold text-emerald-300 mt-0.5 block">
+            <div className="p-2.5 rounded-xl bg-[#1E1E22] border border-[#2A2A2E]">
+              <span className="text-[10px] text-[#6B6B70] uppercase font-mono block">Availability</span>
+              <span className="font-semibold text-[#3FB65F] mt-0.5 block">
                 {candidate.availability}
               </span>
             </div>
@@ -152,7 +152,7 @@ export default function HiringContactModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="pt-3 border-t border-gray-800 flex items-center justify-between gap-2">
+        <div className="pt-3 border-t border-[#2A2A2E] flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={() => {
@@ -168,7 +168,7 @@ export default function HiringContactModal({
           <button
             type="button"
             onClick={onClose}
-            className="btn-ghost text-xs py-2 px-4 border-gray-700 hover:border-gray-600 text-gray-300"
+            className="btn-ghost text-xs py-2 px-4 border-[#2A2A2E] text-[#A3A3A8] hover:text-[#F5F5F4]"
           >
             Close
           </button>

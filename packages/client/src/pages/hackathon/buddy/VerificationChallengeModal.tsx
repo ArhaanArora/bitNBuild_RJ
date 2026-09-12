@@ -37,11 +37,11 @@ export default function VerificationChallengeModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm fade-in">
-      <div className="relative w-full max-w-lg bg-[#0B0F1B] rounded-2xl border border-gray-800 shadow-2xl overflow-hidden p-6">
+      <div className="relative w-full max-w-lg bg-[#17171A] rounded-2xl border border-[#2A2A2E] shadow-2xl overflow-hidden p-6">
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white p-1 rounded-lg hover:bg-gray-800 transition"
+          className="absolute top-4 right-4 text-[#A3A3A8] hover:text-[#F5F5F4] p-1 rounded-lg hover:bg-[#1E1E22] transition"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
@@ -49,21 +49,21 @@ export default function VerificationChallengeModal({
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-[#2B2213] border border-[#D89A3E]/30 flex items-center justify-center text-[#D89A3E] shrink-0">
             <Award className="w-5 h-5" />
           </div>
           <div>
-            <div className="inline-flex items-center gap-1 text-[11px] font-mono text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/20 mb-1">
-              ⚡ Pre-Team Challenge Verification
+            <div className="inline-flex items-center gap-1 text-[11px] font-mono text-[#D89A3E] bg-[#2B2213] px-2 py-0.5 rounded border border-[#D89A3E]/20 mb-1">
+              ⚡ Skill Verification Challenge
             </div>
-            <h3 className="text-lg font-bold text-white">Send Verification Challenge</h3>
-            <p className="text-xs text-gray-400">Request evidence-based task verification from {candidate.name}</p>
+            <h3 className="text-lg font-bold text-[#F5F5F4]">Send Verification Challenge</h3>
+            <p className="text-xs text-[#A3A3A8]">Request proctored task verification from {candidate.name}</p>
           </div>
         </div>
 
         {/* Target Skill Selection */}
         <div className="mb-4">
-          <label className="label text-xs font-semibold text-gray-300 mb-1.5">Skill to Verify</label>
+          <label className="label text-xs font-semibold text-[#A3A3A8] mb-1.5">Skill to Verify</label>
           <div className="flex flex-wrap gap-2">
             {candidate.skills.map((s) => (
               <button
@@ -72,8 +72,8 @@ export default function VerificationChallengeModal({
                 onClick={() => setSelectedSkill(s.name)}
                 className={`text-xs px-3 py-1.5 rounded-lg border transition ${
                   selectedSkill === s.name
-                    ? 'border-indigo-500 bg-indigo-900/30 text-white font-semibold'
-                    : 'border-gray-800 bg-gray-950 text-gray-400 hover:border-gray-700'
+                    ? 'border-[#E8672E] bg-[#241C16] text-[#F5F5F4] font-semibold'
+                    : 'border-[#2A2A2E] bg-[#1E1E22] text-[#A3A3A8] hover:border-[#38383D]'
                 }`}
               >
                 {s.name} {s.status === 'VERIFIED' ? '✓' : '○ Claimed'}
@@ -83,37 +83,37 @@ export default function VerificationChallengeModal({
         </div>
 
         {/* Challenge Specs */}
-        <div className="p-4 rounded-xl bg-gray-950 border border-gray-800/80 mb-5 space-y-3">
-          <div className="flex items-center justify-between border-b border-gray-800/80 pb-2.5">
-            <div className="flex items-center gap-2 text-xs font-semibold text-white">
-              <FileCode className="w-4 h-4 text-indigo-400" />
+        <div className="p-4 rounded-xl bg-[#1E1E22] border border-[#2A2A2E] mb-5 space-y-3">
+          <div className="flex items-center justify-between border-b border-[#2A2A2E] pb-2.5">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#F5F5F4]">
+              <FileCode className="w-4 h-4 text-[#E8672E]" />
               <span>Standard Micro-Challenge: {selectedSkill}</span>
             </div>
-            <div className="flex items-center gap-1 text-[11px] font-mono text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded">
+            <div className="flex items-center gap-1 text-[11px] font-mono text-[#D89A3E] bg-[#2B2213] px-2 py-0.5 rounded">
               <Clock className="w-3 h-3" /> 45 mins
             </div>
           </div>
 
-          <p className="text-xs text-gray-300 leading-relaxed">
-            Candidate receives a sandboxed, time-boxed technical scenario testing real-world capability in{' '}
-            <strong className="text-white">{selectedSkill}</strong>. Results and anti-cheat telemetry will be attached directly to their team application.
+          <p className="text-xs text-[#A3A3A8] leading-relaxed">
+            Candidate receives a proctored technical task testing capability in{' '}
+            <strong className="text-[#F5F5F4]">{selectedSkill}</strong>. Results and telemetry are verified directly on their profile.
           </p>
 
           <div>
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1.5">
+            <span className="text-[11px] font-semibold text-[#6B6B70] uppercase tracking-wider block mb-1.5">
               Evaluation Criteria:
             </span>
-            <ul className="space-y-1 text-xs text-gray-400">
+            <ul className="space-y-1 text-xs text-[#A3A3A8]">
               <li className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Modularity, maintainability, and clean architecture</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#3FB65F] shrink-0" />
+                <span>Clean architecture & maintainability</span>
               </li>
               <li className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Edge case handling and test resilience</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#3FB65F] shrink-0" />
+                <span>Edge case handling & correctness</span>
               </li>
               <li className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#3FB65F] shrink-0" />
                 <span>Execution speed and problem-solving reasoning</span>
               </li>
             </ul>
@@ -125,7 +125,7 @@ export default function VerificationChallengeModal({
           <button
             type="button"
             onClick={onClose}
-            className="btn-ghost flex-1 py-2 text-xs font-semibold"
+            className="btn-ghost flex-1 py-2.5 text-xs font-semibold border-[#2A2A2E] text-[#A3A3A8] hover:text-[#F5F5F4]"
           >
             Cancel
           </button>
@@ -133,10 +133,10 @@ export default function VerificationChallengeModal({
             type="button"
             onClick={handleSendChallenge}
             disabled={submitting}
-            className="btn-primary flex-1 py-2 text-xs font-semibold flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-indigo-600 hover:from-amber-500 hover:to-indigo-500 border-0"
+            className="btn-primary flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-2"
           >
             {submitting ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-[#0D0D0F] border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
                 <Award className="w-4 h-4" />

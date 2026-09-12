@@ -2,15 +2,10 @@ import React, { useState } from 'react';
 import { HiringRequirement } from '../../types/hiring';
 import {
   Search,
-  Briefcase,
-  MapPin,
-  Clock,
-  Sparkles,
   CheckCircle2,
   Plus,
   X,
   ArrowRight,
-  ShieldCheck,
   AlertCircle,
 } from 'lucide-react';
 
@@ -76,7 +71,6 @@ export default function RequirementsView({
   const [location, setLocation] = useState(initialRequirement?.location || 'Nearby');
   const [jobType, setJobType] = useState(initialRequirement?.jobType || 'Full-time');
 
-  // Validation: At least one required skill or a specific role must be selected
   const isValid = (role && role !== 'Any Role') || requiredSkills.length > 0;
 
   const toggleSkill = (skill: string) => {
@@ -89,7 +83,6 @@ export default function RequirementsView({
 
   const handleRoleChange = (newRole: string) => {
     setRole(newRole);
-    // If switching role and current skills are a default set, update with role presets
     if (PRESET_SKILLS_BY_ROLE[newRole]) {
       setRequiredSkills(PRESET_SKILLS_BY_ROLE[newRole].slice(0, 3));
     }
@@ -120,28 +113,29 @@ export default function RequirementsView({
   return (
     <div className="max-w-4xl mx-auto space-y-6 fade-in-up">
       {/* Breadcrumb & Navigation */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between text-xs">
         <button
           type="button"
           onClick={onBack}
-          className="text-xs text-gray-400 hover:text-white flex items-center gap-1.5 transition"
+          className="text-[#A3A3A8] hover:text-[#F5F5F4] flex items-center gap-1.5 transition"
         >
           <span>← Back to Hiring Dashboard</span>
         </button>
-        <span className="text-xs text-indigo-400 font-mono">Step 1 of 2: Define Requirements</span>
+        <span className="text-[#E8672E] font-medium">Step 1 of 2: Define Requirements</span>
       </div>
 
       {/* Main Requirements Card */}
-      <div className="card border-indigo-900/40 bg-gradient-to-br from-[#0a0f1d] via-[#0B0F1B] to-[#080c18] p-6 sm:p-8 rounded-2xl shadow-2xl space-y-6">
+      <div className="bg-[#17171A] border border-[#2A2A2E] p-6 sm:p-8 rounded-xl space-y-6">
         {/* Header */}
-        <div className="border-b border-gray-800 pb-5">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
-            <ShieldCheck className="w-3.5 h-3.5" /> Verified Candidate Discovery
+        <div className="border-b border-[#2A2A2E] pb-5">
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E8672E] tracking-wider uppercase mb-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#E8672E]" />
+            <span>VERIFIED CANDIDATE DISCOVERY</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h2 className="text-2xl font-semibold text-[#F5F5F4] tracking-tight">
             What are you hiring for?
           </h2>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-xs sm:text-sm text-[#A3A3A8] mt-1">
             Specify the role, verified capabilities, and parameters. We will rank candidates with mathematically explainable matching evidence.
           </p>
         </div>
@@ -151,9 +145,7 @@ export default function RequirementsView({
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {/* Looking for: Role */}
             <div>
-              <label className="label text-xs font-semibold text-gray-300">
-                Looking for
-              </label>
+              <label className="label">Looking for</label>
               <select
                 value={role}
                 onChange={(e) => handleRoleChange(e.target.value)}
@@ -169,9 +161,7 @@ export default function RequirementsView({
 
             {/* Experience */}
             <div>
-              <label className="label text-xs font-semibold text-gray-300">
-                Experience
-              </label>
+              <label className="label">Experience</label>
               <select
                 value={experience}
                 onChange={(e) => setExperience(e.target.value)}
@@ -186,9 +176,7 @@ export default function RequirementsView({
 
             {/* Location */}
             <div>
-              <label className="label text-xs font-semibold text-gray-300">
-                Location
-              </label>
+              <label className="label">Location</label>
               <select
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
@@ -206,9 +194,7 @@ export default function RequirementsView({
 
             {/* Job Type */}
             <div>
-              <label className="label text-xs font-semibold text-gray-300">
-                Job Type (Optional)
-              </label>
+              <label className="label">Job Type (Optional)</label>
               <select
                 value={jobType}
                 onChange={(e) => setJobType(e.target.value as any)}
@@ -223,17 +209,17 @@ export default function RequirementsView({
           </div>
 
           {/* Required Skills Section */}
-          <div className="p-5 rounded-xl bg-gray-950/70 border border-gray-800 space-y-3">
+          <div className="p-5 rounded-lg bg-[#1E1E22] border border-[#2A2A2E] space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <label className="text-xs font-semibold text-white block">
+                <label className="text-xs font-semibold text-[#F5F5F4] block">
                   Required Verified Skills
                 </label>
-                <span className="text-[11px] text-gray-400">
+                <span className="text-[11px] text-[#A3A3A8]">
                   Select key competencies. Candidates with platform-verified assessments will rank highest.
                 </span>
               </div>
-              <span className="text-xs font-mono text-indigo-400">
+              <span className="text-xs font-mono text-[#E8672E]">
                 {requiredSkills.length} selected
               </span>
             </div>
@@ -243,14 +229,14 @@ export default function RequirementsView({
               {requiredSkills.map((s) => (
                 <span
                   key={s}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-semibold bg-indigo-600/30 text-indigo-300 border border-indigo-500/40"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-medium bg-[#241C16] text-[#F5F5F4] border border-[#E8672E]"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#E8672E]" />
                   <span>{s}</span>
                   <button
                     type="button"
                     onClick={() => toggleSkill(s)}
-                    className="hover:text-white transition ml-0.5"
+                    className="hover:text-white transition ml-0.5 text-[#A3A3A8]"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -258,7 +244,7 @@ export default function RequirementsView({
               ))}
 
               {requiredSkills.length === 0 && (
-                <div className="text-xs text-amber-400 flex items-center gap-1.5 py-1">
+                <div className="text-xs text-[#D89A3E] flex items-center gap-1.5 py-1">
                   <AlertCircle className="w-4 h-4" />
                   <span>No skills selected yet. Choose from suggested chips below or type your own.</span>
                 </div>
@@ -266,8 +252,8 @@ export default function RequirementsView({
             </div>
 
             {/* Quick Add Suggested Chips */}
-            <div className="pt-2 border-t border-gray-800/80">
-              <span className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider block mb-2">
+            <div className="pt-2 border-t border-[#2A2A2E]">
+              <span className="text-[10px] text-[#6B6B70] font-semibold uppercase tracking-wider block mb-2">
                 Popular Skill Chips
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -280,8 +266,8 @@ export default function RequirementsView({
                       onClick={() => toggleSkill(chip)}
                       className={`text-xs px-2.5 py-1 rounded-lg border font-mono transition ${
                         isSelected
-                          ? 'bg-indigo-600 text-white border-indigo-500 font-semibold'
-                          : 'bg-gray-900/90 text-gray-400 border-gray-800 hover:border-gray-700 hover:text-white'
+                          ? 'bg-[#241C16] text-[#F5F5F4] border-[#E8672E] font-medium'
+                          : 'bg-[#17171A] text-[#A3A3A8] border-[#2A2A2E] hover:border-[#38383D] hover:text-white'
                       }`}
                     >
                       {isSelected ? '✓ ' : '+ '}
@@ -306,7 +292,7 @@ export default function RequirementsView({
                   type="button"
                   onClick={addCustomSkill}
                   disabled={!customSkillInput.trim()}
-                  className="btn-ghost btn-sm text-xs border-gray-700 hover:border-gray-600 disabled:opacity-50 text-gray-200"
+                  className="btn-secondary text-xs disabled:opacity-50"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add</span>
@@ -316,15 +302,15 @@ export default function RequirementsView({
           </div>
 
           {/* Validation Notice & Submit CTA */}
-          <div className="pt-4 border-t border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="text-xs text-gray-500">
+          <div className="pt-4 border-t border-[#2A2A2E] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="text-xs text-[#6B6B70]">
               {!isValid ? (
-                <span className="text-amber-400 flex items-center gap-1">
+                <span className="text-[#D89A3E] flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" /> Please select at least one role or required skill to search.
                 </span>
               ) : (
-                <span className="text-gray-400 flex items-center gap-1">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Ready to query candidate discovery pool.
+                <span className="text-[#A3A3A8] flex items-center gap-1">
+                  <CheckCircle2 className="w-4 h-4 text-[#3FB65F]" /> Ready to query candidate discovery pool.
                 </span>
               )}
             </div>
@@ -332,11 +318,11 @@ export default function RequirementsView({
             <button
               type="submit"
               disabled={!isValid}
-              className="btn-primary flex items-center justify-center gap-2 px-6 py-2.5 text-sm shadow-lg shadow-indigo-600/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="btn-primary flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Search className="w-4 h-4" />
+              <Search className="w-3.5 h-3.5" />
               <span>Find Candidates</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </form>

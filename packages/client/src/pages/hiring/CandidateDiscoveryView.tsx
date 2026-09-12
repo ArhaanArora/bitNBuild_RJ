@@ -143,23 +143,23 @@ export default function CandidateDiscoveryView({
     <div className="space-y-6 fade-in-up pb-12">
       {/* Top Header & Breadcrumbs */}
       <div>
-        <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+        <div className="flex items-center justify-between text-xs text-[#6B6B70] mb-2">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={onBackToDashboard}
-              className="text-gray-400 hover:text-white transition"
+              className="text-[#A3A3A8] hover:text-[#F5F5F4] transition"
             >
               Hiring Dashboard
             </button>
             <span>/</span>
-            <span className="text-indigo-400 font-medium">Candidate Discovery</span>
+            <span className="text-[#E8672E] font-medium">Candidate Discovery</span>
           </div>
 
           <button
             type="button"
             onClick={onViewShortlist}
-            className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 transition"
+            className="flex items-center gap-1.5 text-xs text-[#E8672E] hover:text-[#F3773D] transition"
           >
             <Bookmark className="w-3.5 h-3.5" />
             <span>Shortlisted ({shortlistedIds.length})</span>
@@ -168,16 +168,17 @@ export default function CandidateDiscoveryView({
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
-              <ShieldCheck className="w-3.5 h-3.5" /> Evidence-Backed Candidate Rankings
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E8672E] tracking-wider uppercase mb-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E8672E]" />
+              <span>EVIDENCE-BACKED CANDIDATE RANKINGS</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-[#F5F5F4] tracking-tight">
               Discovered Talent Pool
             </h1>
-            <p className="text-xs sm:text-sm text-gray-400 mt-1">
+            <p className="text-xs sm:text-sm text-[#A3A3A8] mt-1">
               Matching candidates against{' '}
-              <span className="text-indigo-300 font-semibold">{requirement.role}</span> with skills:{' '}
-              <span className="font-mono text-emerald-400">
+              <span className="text-[#F5F5F4] font-medium">{requirement.role}</span> with skills:{' '}
+              <span className="font-mono text-[#E8672E]">
                 {requirement.requiredSkills.join(', ') || 'General Competencies'}
               </span>
             </p>
@@ -187,9 +188,9 @@ export default function CandidateDiscoveryView({
             <button
               type="button"
               onClick={onEditRequirements}
-              className="btn-ghost text-xs py-2 px-3.5 border-gray-700 hover:border-gray-600 text-gray-200 flex items-center gap-1.5"
+              className="btn-ghost text-xs py-2 px-3.5 flex items-center gap-1.5"
             >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-400" />
+              <SlidersHorizontal className="w-3.5 h-3.5 text-[#E8672E]" />
               <span>Modify Requirements</span>
             </button>
           </div>
@@ -197,11 +198,11 @@ export default function CandidateDiscoveryView({
       </div>
 
       {/* Filter & Sort Bar (Section 17) */}
-      <div className="card p-4 rounded-xl bg-[#0e1424]/90 border border-gray-800/90 space-y-3">
+      <div className="bg-[#17171A] border border-[#2A2A2E] rounded-xl p-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Role Filter Chips */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs text-gray-500 mr-1 font-medium">Role:</span>
+            <span className="text-xs text-[#6B6B70] mr-1 font-medium">Role:</span>
             {ROLE_FILTERS.map((rf) => (
               <button
                 key={rf}
@@ -209,8 +210,8 @@ export default function CandidateDiscoveryView({
                 onClick={() => setActiveRoleFilter(rf)}
                 className={`text-xs px-2.5 py-1 rounded-lg border transition ${
                   activeRoleFilter === rf
-                    ? 'bg-indigo-600 text-white border-indigo-500 font-semibold shadow-xs'
-                    : 'bg-gray-900/80 text-gray-400 border-gray-800 hover:border-gray-700 hover:text-white'
+                    ? 'bg-[#241C16] text-[#F5F5F4] border-[#E8672E] font-medium'
+                    : 'bg-[#1E1E22] text-[#A3A3A8] border-[#2A2A2E] hover:border-[#38383D] hover:text-white'
                 }`}
               >
                 {rf}
@@ -224,7 +225,7 @@ export default function CandidateDiscoveryView({
             <select
               value={minCredibility}
               onChange={(e) => setMinCredibility(Number(e.target.value))}
-              className="input text-xs py-1 px-2.5 bg-gray-900 border-gray-800 text-gray-300 w-auto"
+              className="text-xs py-1 px-2.5 bg-[#1E1E22] border border-[#2A2A2E] rounded-lg text-[#F5F5F4] w-auto focus:outline-none focus:border-[#E8672E]"
             >
               <option value="0">Credibility: Any</option>
               <option value="80">Credibility: 80%+</option>
@@ -236,7 +237,7 @@ export default function CandidateDiscoveryView({
             <select
               value={locationFilter}
               onChange={(e) => setLocationFilter(e.target.value)}
-              className="input text-xs py-1 px-2.5 bg-gray-900 border-gray-800 text-gray-300 w-auto"
+              className="text-xs py-1 px-2.5 bg-[#1E1E22] border border-[#2A2A2E] rounded-lg text-[#F5F5F4] w-auto focus:outline-none focus:border-[#E8672E]"
             >
               <option value="All">Location: All</option>
               <option value="Nearby">Nearby</option>
@@ -249,7 +250,7 @@ export default function CandidateDiscoveryView({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="input text-xs py-1 px-2.5 bg-gray-900 border-gray-800 text-indigo-300 font-semibold w-auto"
+              className="text-xs py-1 px-2.5 bg-[#1E1E22] border border-[#2A2A2E] rounded-lg text-[#E8672E] font-medium w-auto focus:outline-none focus:border-[#E8672E]"
             >
               <option value="match">Sort: Best Match</option>
               <option value="credibility">Sort: Credibility</option>
@@ -260,25 +261,24 @@ export default function CandidateDiscoveryView({
         </div>
 
         {/* Live Result Count Bar */}
-        <div className="flex items-center justify-between pt-2 border-t border-gray-800/60 text-xs text-gray-400">
+        <div className="flex items-center justify-between pt-2 border-t border-[#2A2A2E] text-xs text-[#A3A3A8]">
           <div className="flex items-center gap-2">
             <span>
               Showing <strong className="text-white">{visibleMatches.length}</strong> of{' '}
-              <strong className="text-indigo-400">{allMatches.length}</strong> verified candidates
+              <strong className="text-[#E8672E]">{allMatches.length}</strong> verified candidates
             </span>
             {(activeRoleFilter !== 'All Roles' || minCredibility !== 80 || locationFilter !== 'All') && (
-              <span className="text-[11px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/20">
+              <span className="text-[11px] font-mono text-[#3FB65F] bg-[#16261B] px-2 py-0.5 rounded border border-[#3FB65F]/30">
                 Filters active
               </span>
             )}
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Demo edge case toggle: Simulated error state (Section 20A) */}
             <button
               type="button"
               onClick={() => setSimulatedError(!simulatedError)}
-              className="text-[11px] text-gray-500 hover:text-amber-400 transition"
+              className="text-[11px] text-[#6B6B70] hover:text-[#D89A3E] transition"
               title="Test simulated error handling for demo"
             >
               {simulatedError ? 'Clear Demo Error' : 'Simulate API Fault'}
@@ -289,10 +289,10 @@ export default function CandidateDiscoveryView({
 
       {/* Simulated Error State (Section 20A) */}
       {simulatedError ? (
-        <div className="card border-amber-500/40 bg-amber-950/20 p-8 rounded-2xl text-center space-y-4">
-          <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto" />
-          <h3 className="text-lg font-bold text-white">Search Service Temporarily Degraded</h3>
-          <p className="text-xs text-gray-400 max-w-md mx-auto">
+        <div className="bg-[#17171A] border border-[#2B2213] p-8 rounded-xl text-center space-y-4">
+          <AlertTriangle className="w-8 h-8 text-[#D89A3E] mx-auto" />
+          <h3 className="text-base font-semibold text-white">Search Service Temporarily Degraded</h3>
+          <p className="text-xs text-[#A3A3A8] max-w-md mx-auto">
             A simulated network timeout occurred while querying real-time assessment benchmarks. Cached credibility scores are preserved.
           </p>
           <button
@@ -313,46 +313,46 @@ export default function CandidateDiscoveryView({
           {[1, 2, 3, 4].map((n) => (
             <div
               key={n}
-              className="border border-gray-800 bg-[#0B0F1B]/90 p-5 rounded-2xl h-80 flex flex-col justify-between"
+              className="border border-[#2A2A2E] bg-[#17171A] p-5 rounded-xl h-80 flex flex-col justify-between"
             >
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gray-800" />
+                  <div className="w-12 h-12 rounded-full bg-[#1E1E22]" />
                   <div className="space-y-2 flex-1">
-                    <div className="h-4 bg-gray-800 rounded w-1/3" />
-                    <div className="h-3 bg-gray-800/60 rounded w-1/4" />
+                    <div className="h-4 bg-[#1E1E22] rounded w-1/3" />
+                    <div className="h-3 bg-[#1E1E22]/60 rounded w-1/4" />
                   </div>
                 </div>
-                <div className="h-16 bg-gray-900/60 rounded-xl" />
-                <div className="h-10 bg-gray-900/40 rounded-xl" />
+                <div className="h-16 bg-[#1E1E22] rounded-lg" />
+                <div className="h-10 bg-[#1E1E22] rounded-lg" />
               </div>
-              <div className="h-8 bg-gray-900 rounded-lg" />
+              <div className="h-8 bg-[#1E1E22] rounded-lg" />
             </div>
           ))}
         </div>
       ) : allMatches.length === 0 ? (
         /* Empty State with concrete recovery action (Section 4 & 20A) */
-        <div className="card border-gray-800 bg-[#0B0F1B]/90 p-12 rounded-2xl text-center space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-950/40 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mx-auto">
-            <Search className="w-7 h-7" />
+        <div className="bg-[#17171A] border border-[#2A2A2E] p-12 rounded-xl text-center space-y-4">
+          <div className="w-12 h-12 rounded-xl bg-[#1E1E22] border border-[#2A2A2E] flex items-center justify-center text-[#A3A3A8] mx-auto">
+            <Search className="w-6 h-6" />
           </div>
-          <h3 className="text-lg font-bold text-white">No candidates match all your filters yet</h3>
-          <p className="text-xs text-gray-400 max-w-md mx-auto">
+          <h3 className="text-base font-semibold text-white">No candidates match all your filters yet</h3>
+          <p className="text-xs text-[#A3A3A8] max-w-md mx-auto">
             Try broadening your location preference or lowering the credibility score threshold to see candidates with adjacent verified competencies.
           </p>
           <div className="flex items-center justify-center gap-3 pt-2">
             <button
               type="button"
               onClick={handleBroadenSearch}
-              className="btn-primary text-xs py-2 px-4 shadow-md shadow-indigo-600/30 flex items-center gap-1.5"
+              className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Broaden Search (Relax Filters)</span>
+              <span>Broaden Search</span>
             </button>
             <button
               type="button"
               onClick={onEditRequirements}
-              className="btn-ghost text-xs py-2 px-4 border-gray-700 text-gray-300"
+              className="btn-ghost text-xs py-2 px-4"
             >
               Edit Requirements
             </button>

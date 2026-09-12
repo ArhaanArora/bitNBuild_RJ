@@ -35,69 +35,73 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div className="space-y-6 fade-in-up">
+    <div className="space-y-6 fade-in-up pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Projects</h1>
-          <p className="text-gray-400 text-sm mt-1">Add project evidence and verify code integrity in 3D</p>
+          <h1 className="text-2xl font-bold text-[#F5F5F4]">Projects</h1>
+          <p className="text-[#A3A3A8] text-sm mt-1">Add project evidence and verify codebase integrity</p>
         </div>
         <div className="flex items-center gap-3">
-          <Link to="/analysis/report" className="btn-ghost text-xs flex items-center gap-1.5 border-gray-700">
-            <Compass className="w-4 h-4 text-indigo-400" />
+          <Link to="/analysis/report" className="btn-ghost text-xs flex items-center gap-1.5 border-[#2A2A2E] text-[#A3A3A8] hover:text-[#F5F5F4]">
+            <Compass className="w-4 h-4 text-[#E8672E]" />
             <span>3D Constellation</span>
           </Link>
-          <button onClick={() => setVerifyModalOpen(true)} className="btn-accent text-xs flex items-center gap-1.5">
+          <button onClick={() => setVerifyModalOpen(true)} className="btn-ghost text-xs flex items-center gap-1.5 border-[#3FB65F]/30 bg-[#16261B] text-[#3FB65F]">
             <ShieldCheck className="w-4 h-4" />
-            <span>AI Verification</span>
+            <span>Code Audit</span>
           </button>
           <button onClick={() => setAdding(true)} className="btn-primary text-xs">+ Add Project</button>
         </div>
       </div>
 
       {adding && (
-        <div className="card border-indigo-700/50 space-y-3">
-          <h3 className="section-title">New Project</h3>
-          <div><label className="label">Project name *</label><input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
-          <div><label className="label">Description</label><textarea rows={3} className="input" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
-          <div><label className="label">Your role</label><input className="input" placeholder="e.g. Backend Developer" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} /></div>
-          <div><label className="label">Technologies (comma-separated)</label><input className="input" placeholder="Python, Django, React" value={form.technologies} onChange={e => setForm(f => ({ ...f, technologies: e.target.value }))} /></div>
+        <div className="card border border-[#2A2A2E] bg-[#17171A] space-y-3">
+          <h3 className="section-title text-[#F5F5F4]">New Project</h3>
+          <div><label className="label text-[#A3A3A8]">Project name *</label><input className="input text-xs" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
+          <div><label className="label text-[#A3A3A8]">Description</label><textarea rows={3} className="input text-xs" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
+          <div><label className="label text-[#A3A3A8]">Your role</label><input className="input text-xs" placeholder="e.g. Backend Developer" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} /></div>
+          <div><label className="label text-[#A3A3A8]">Technologies (comma-separated)</label><input className="input text-xs" placeholder="Python, Django, React" value={form.technologies} onChange={e => setForm(f => ({ ...f, technologies: e.target.value }))} /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="label">GitHub URL</label><input className="input" placeholder="https://github.com/…" value={form.githubUrl} onChange={e => setForm(f => ({ ...f, githubUrl: e.target.value }))} /></div>
-            <div><label className="label">Live URL</label><input className="input" placeholder="https://…" value={form.projectUrl} onChange={e => setForm(f => ({ ...f, projectUrl: e.target.value }))} /></div>
+            <div><label className="label text-[#A3A3A8]">GitHub URL</label><input className="input text-xs" placeholder="https://github.com/…" value={form.githubUrl} onChange={e => setForm(f => ({ ...f, githubUrl: e.target.value }))} /></div>
+            <div><label className="label text-[#A3A3A8]">Live URL</label><input className="input text-xs" placeholder="https://…" value={form.projectUrl} onChange={e => setForm(f => ({ ...f, projectUrl: e.target.value }))} /></div>
           </div>
           <div className="flex gap-3">
-            <button onClick={() => setAdding(false)} className="btn-ghost flex-1">Cancel</button>
+            <button onClick={() => setAdding(false)} className="btn-ghost flex-1 border-[#2A2A2E] text-[#A3A3A8]">Cancel</button>
             <button onClick={save} className="btn-primary flex-1">Save Project</button>
           </div>
         </div>
       )}
 
       {projects.length === 0 && !adding ? (
-        <div className="card text-center py-12">
-          <p className="text-gray-500">No projects yet. Add one to strengthen your profile.</p>
+        <div className="card text-center py-12 border-[#2A2A2E] bg-[#17171A]">
+          <p className="text-[#6B6B70]">No projects yet. Add one to strengthen your profile.</p>
           <button onClick={() => setAdding(true)} className="btn-primary mt-3">Add first project</button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {projects.map(p => (
-            <div key={p.id} className="card-hover relative">
-              <button onClick={() => del(p.id)} className="absolute top-3 right-3 text-gray-600 hover:text-red-400 text-lg">✕</button>
-              <h3 className="font-semibold text-white mb-1">{p.name}</h3>
-              {p.role && <p className="text-xs text-indigo-400 mb-2">{p.role}</p>}
-              <p className="text-sm text-gray-400 mb-3 line-clamp-2">{p.description}</p>
+            <div key={p.id} className="card-hover relative border border-[#2A2A2E] bg-[#17171A]">
+              <button onClick={() => del(p.id)} className="absolute top-3 right-3 text-[#6B6B70] hover:text-[#E0554E] text-lg">✕</button>
+              <h3 className="font-semibold text-[#F5F5F4] mb-1">{p.name}</h3>
+              {p.role && <p className="text-xs text-[#E8672E] mb-2">{p.role}</p>}
+              <p className="text-sm text-[#A3A3A8] mb-3 line-clamp-2">{p.description}</p>
               <div className="flex flex-wrap gap-1.5 mb-3">
-                {(p.technologies ?? []).map(t => <span key={t} className="badge badge-unverified text-xs">{t}</span>)}
+                {(p.technologies ?? []).map(t => (
+                  <span key={t} className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#1E1E22] text-[#A3A3A8] border border-[#2A2A2E]">
+                    {t}
+                  </span>
+                ))}
               </div>
               <div className="flex gap-3 text-xs">
-                {p.githubUrl && <a href={p.githubUrl} target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline">GitHub →</a>}
-                {p.projectUrl && <a href={p.projectUrl} target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline">Live →</a>}
+                {p.githubUrl && <a href={p.githubUrl} target="_blank" rel="noreferrer" className="text-[#A3A3A8] hover:text-[#F5F5F4] hover:underline">GitHub →</a>}
+                {p.projectUrl && <a href={p.projectUrl} target="_blank" rel="noreferrer" className="text-[#3FB65F] hover:underline">Live →</a>}
               </div>
-              <div className="mt-3 pt-3 border-t border-gray-800 flex items-center justify-between">
-                <Link to="/analysis/report" className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium">
-                  <Compass className="w-3.5 h-3.5" /> 3D Trust Scorecard →
+              <div className="mt-3 pt-3 border-t border-[#2A2A2E] flex items-center justify-between">
+                <Link to="/analysis/report" className="text-xs text-[#3FB65F] hover:underline flex items-center gap-1 font-medium">
+                  <Compass className="w-3.5 h-3.5" /> 3D Scorecard →
                 </Link>
-                <button onClick={() => setVerifyModalOpen(true)} className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" /> AI Verify
+                <button onClick={() => setVerifyModalOpen(true)} className="text-xs text-[#E8672E] hover:text-[#F3773D] flex items-center gap-1 font-medium">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Verify Code
                 </button>
               </div>
             </div>

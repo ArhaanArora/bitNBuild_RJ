@@ -62,41 +62,41 @@ export default function ShortlistedView({ onBack, onExplore }: ShortlistedViewPr
         <button
           type="button"
           onClick={onBack}
-          className="text-xs text-gray-400 hover:text-white flex items-center gap-1.5 transition"
+          className="text-xs text-[#A3A3A8] hover:text-[#F5F5F4] flex items-center gap-1.5 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Hiring Dashboard</span>
         </button>
-        <span className="text-xs font-mono text-emerald-400">
+        <span className="text-xs font-mono text-[#3FB65F]">
           {shortlistedIds.length} candidates saved
         </span>
       </div>
 
       <div>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#16261B] border border-[#3FB65F]/20 text-[#3FB65F] text-xs font-semibold uppercase tracking-wider mb-2">
           <Bookmark className="w-3.5 h-3.5" /> Recruiter Shortlist
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F5F5F4] tracking-tight">
           Shortlisted Candidates
         </h1>
-        <p className="text-xs sm:text-sm text-gray-400 mt-1">
+        <p className="text-xs sm:text-sm text-[#A3A3A8] mt-1">
           Review candidates you have saved for recruitment and direct contact outreach.
         </p>
       </div>
 
       {shortlistedMatches.length === 0 ? (
-        <div className="card border-gray-800 bg-[#0B0F1B]/90 p-12 rounded-2xl text-center space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-950/40 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mx-auto">
+        <div className="card border-[#2A2A2E] bg-[#17171A] p-12 rounded-2xl text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-[#241C16] border border-[#E8672E]/30 flex items-center justify-center text-[#E8672E] mx-auto">
             <Bookmark className="w-7 h-7" />
           </div>
-          <h3 className="text-lg font-bold text-white">Your shortlist is currently empty</h3>
-          <p className="text-xs text-gray-400 max-w-md mx-auto">
+          <h3 className="text-lg font-bold text-[#F5F5F4]">Your shortlist is currently empty</h3>
+          <p className="text-xs text-[#A3A3A8] max-w-md mx-auto">
             Browse discovered candidates and click "Shortlist" on any card to save them here for easy review and direct contact.
           </p>
           <button
             type="button"
             onClick={onExplore}
-            className="btn-primary text-xs py-2.5 px-5 shadow-lg shadow-indigo-600/30 inline-flex items-center gap-2 mx-auto"
+            className="btn-primary text-xs py-2.5 px-5 inline-flex items-center gap-2 mx-auto"
           >
             <Search className="w-4 h-4" />
             <span>Find Candidates</span>
