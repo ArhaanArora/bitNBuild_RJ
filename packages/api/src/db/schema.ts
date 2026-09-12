@@ -3,6 +3,7 @@ import { pgTable, text, integer, boolean, timestamp, jsonb, uuid, real, pgEnum, 
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
 export const userRoleEnum = pgEnum('user_role', ['candidate', 'organizer', 'recruiter', 'admin']);
+export const adminRoleEnum = pgEnum('admin_role', ['super_admin', 'security_admin', 'verification_admin', 'support_admin']);
 export const skillLevelEnum = pgEnum('skill_level', ['beginner', 'intermediate', 'advanced', 'expert']);
 export const verificationStatusEnum = pgEnum('verification_status', [
   'UNVERIFIED',
@@ -32,6 +33,15 @@ export const users = pgTable('users', {
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   role: userRoleEnum('role').notNull().default('candidate'),
+  emailVerified: boolean('email_verified').notNull().default(false),
+  profileCompleted: boolean('profile_completed').notNull().default(false),
+  verificationStatus: text('verification_status').notNull().default('PENDING'),
+  status: text('status').notNull().default('active'),
+  lastLoginAt: timestamp('last_login_at'),
+  workEmail: text('work_email'),
+  jobTitle: text('job_title'),
+  organizationName: text('organization_name'),
+  eventName: text('event_name'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -323,12 +333,49 @@ export const notifications = pgTable('notifications', {
 export const auditLogs = pgTable('audit_logs', {
   id: uuid('id').primaryKey().defaultRandom(),
   publicId: text('public_id'),
-  actorId: uuid('actor_id').references(() => users.id, { onDelete: 'set null' }),
+  actorId: text('actor_id'),
+  actorEmail: text('actor_email'),
+  actorRole: text('actor_role'),
   action: text('action').notNull(),
   entityType: text('entity_type').notNull(),
   entityId: text('entity_id').notNull(),
   details: jsonb('details'),
+  reason: text('reason'),
   ipAddress: text('ip_address'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// ─── Admin Security Domain (Isolated Credential Space) ─────────────────────
+
+export const admins = pgTable('admins', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  adminRole: adminRoleEnum('admin_role').notNull().default('super_admin'),
+  name: text('name').notNull(),
+  status: text('status').notNull().default('active'), // 'active' | 'suspended'
+  lastLoginAt: timestamp('last_login_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// ─── Password Resets & Email Verifications ──────────────────────────────────
+
+export const passwordResets = pgTable('password_resets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull(),
+  token: text('token').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  usedAt: timestamp('used_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const emailVerifications = pgTable('email_verifications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  token: text('token').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  verifiedAt: timestamp('verified_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -484,5 +531,8 @@ export type FeatureFlag = typeof featureFlags.$inferSelect;
 export type AiModelRegistry = typeof aiModelRegistry.$inferSelect;
 export type AiInferenceLog = typeof aiInferenceLogs.$inferSelect;
 export type SystemIncident = typeof systemIncidents.$inferSelect;
+export type Admin = typeof admins.$inferSelect;
+export type PasswordReset = typeof passwordResets.$inferSelect;
+export type EmailVerification = typeof emailVerifications.$inferSelect;
 
 

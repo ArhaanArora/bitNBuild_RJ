@@ -19,6 +19,8 @@ import { verificationRouter } from './verification/router';
 import { analysisRouter } from './analysis/router';
 import { notificationsRouter } from './notifications/router';
 import { adminRouter } from './admin/router';
+import { adminAuthRouter } from './admin/auth.router';
+import { adminSecurityRouter } from './admin/security.router';
 import { hiringRouter } from './hiring/router';
 
 const app = express();
@@ -58,6 +60,8 @@ app.use('/api/teams', teamsRouter);
 app.use('/api/verification', verificationRouter);
 app.use('/api/analysis', analysisRouter);
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/admin/auth', adminAuthRouter);
+app.use('/api/admin/security', adminSecurityRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/hiring', hiringRouter);
 

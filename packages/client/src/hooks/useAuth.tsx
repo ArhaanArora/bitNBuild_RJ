@@ -1,105 +1,166 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { api } from '../lib/api';
-
-interface User {
-  id: string;
-  email: string;
-  role: 'candidate' | 'organizer' | 'recruiter' | 'admin';
-  firstName?: string;
-  lastName?: string;
-}
+import { authService, UserProfile, RegisterPayload } from '../services/auth.service';
+import { firebaseService } from '../services/firebase.service';
+import toast from 'react-hot-toast';
 
 interface AuthCtx {
-  user: User | null;
+  user: UserProfile | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  roleConflict: { error: string; existingRole: string } | null;
+  login: (email: string, password: string, rememberDevice?: boolean) => Promise<UserProfile>;
+  register: (payload: RegisterPayload) => Promise<UserProfile>;
+  googleSignIn: (role?: 'candidate' | 'recruiter' | 'organizer') => Promise<{ user?: UserProfile; isNewUser?: boolean; email?: string }>;
   logout: () => void;
   switchRole: (role: 'candidate' | 'organizer' | 'recruiter') => Promise<void>;
-}
-
-interface RegisterData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  role: 'candidate' | 'organizer' | 'recruiter';
+  refreshUser: () => Promise<void>;
+  clearRoleConflict: () => void;
 }
 
 const AuthContext = createContext<AuthCtx | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [roleConflict, setRoleConflict] = useState<{ error: string; existingRole: string } | null>(null);
 
-  const performAutoLogin = async (email = 'alex@demo.local') => {
-    try {
-      const { data } = await api.post('/auth/login', { email, password: 'Demo1234!' });
-      localStorage.setItem('access_token', data.access);
-      localStorage.setItem('refresh_token', data.refresh);
-      setUser(data.user);
-      return data.user;
-    } catch {
-      const fallbackUser: User = {
-        id: '599deb10-f111-4718-ae3a-6276febbc02a',
-        email,
-        role: email.includes('recruiter') ? 'recruiter' : email.includes('organizer') ? 'organizer' : 'candidate',
-        firstName: email.includes('recruiter') ? 'Maya' : email.includes('organizer') ? 'Raj' : 'Alex',
-        lastName: email.includes('recruiter') ? 'Recruiter' : email.includes('organizer') ? 'Organizer' : 'Chen',
-      };
-      setUser(fallbackUser);
-      return fallbackUser;
-    }
-  };
-
-  const restore = useCallback(async () => {
-    const token = localStorage.getItem('access_token');
+  const restoreSession = useCallback(async () => {
+    const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
     if (!token) {
-      await performAutoLogin();
+      setUser(null);
       setLoading(false);
       return;
     }
+
     try {
-      const { data } = await api.get('/auth/me');
-      setUser({ ...data, firstName: data.profile?.firstName, lastName: data.profile?.lastName });
+      const me = await authService.getMe();
+      setUser(me);
     } catch {
-      await performAutoLogin();
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      sessionStorage.removeItem('access_token');
+      sessionStorage.removeItem('refresh_token');
+      setUser(null);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { restore(); }, [restore]);
+  useEffect(() => {
+    restoreSession();
+  }, [restoreSession]);
 
-  const login = async (email: string, password: string) => {
-    const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem('access_token', data.access);
-    localStorage.setItem('refresh_token', data.refresh);
-    setUser(data.user);
+  const login = async (email: string, password: string, rememberDevice = true): Promise<UserProfile> => {
+    setRoleConflict(null);
+    try {
+      const res = await authService.login(email, password);
+      const storage = rememberDevice ? localStorage : sessionStorage;
+      storage.setItem('access_token', res.access);
+      storage.setItem('refresh_token', res.refresh);
+      setUser(res.user);
+      toast.success(res.message || `Welcome back, ${res.user.firstName || 'User'}.`);
+      return res.user;
+    } catch (err: any) {
+      const serverMsg = err.response?.data?.error || "We couldn't sign you in. Check your email and password and try again.";
+      toast.error(serverMsg);
+      throw err;
+    }
   };
 
-  const register = async (form: RegisterData) => {
-    const { data } = await api.post('/auth/register', form);
-    localStorage.setItem('access_token', data.access);
-    localStorage.setItem('refresh_token', data.refresh);
-    setUser(data.user);
+  const register = async (payload: RegisterPayload): Promise<UserProfile> => {
+    setRoleConflict(null);
+    try {
+      const res = await authService.register(payload);
+      localStorage.setItem('access_token', res.access);
+      localStorage.setItem('refresh_token', res.refresh);
+      setUser(res.user);
+      toast.success(res.message || `Account created successfully.`);
+      return res.user;
+    } catch (err: any) {
+      if (err.response?.status === 409 && err.response?.data?.roleConflict) {
+        setRoleConflict({
+          error: err.response.data.error,
+          existingRole: err.response.data.existingRole,
+        });
+        toast.error(err.response.data.error);
+      } else {
+        toast.error(err.response?.data?.error || 'Registration failed');
+      }
+      throw err;
+    }
   };
 
-  const switchRole = async (role: 'candidate' | 'organizer' | 'recruiter') => {
-    const emails = {
-      candidate: 'alex@demo.local',
-      recruiter: 'recruiter@acme.com',
-      organizer: 'organizer@demo.local',
-    };
-    await performAutoLogin(emails[role]);
+  const googleSignIn = async (role?: 'candidate' | 'recruiter' | 'organizer') => {
+    setRoleConflict(null);
+    try {
+      const googleUser = await firebaseService.signInWithGoogle();
+      const res = await authService.googleAuth({
+        email: googleUser.email,
+        name: googleUser.displayName,
+        photoUrl: googleUser.photoURL,
+        role,
+      });
+
+      if (res.isNewUser) {
+        return { isNewUser: true, email: res.email };
+      }
+
+      localStorage.setItem('access_token', res.access);
+      localStorage.setItem('refresh_token', res.refresh);
+      setUser(res.user);
+      toast.success(res.message || `Welcome back, ${res.user.firstName || 'User'}.`);
+      return { user: res.user };
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Google authentication failed');
+      throw err;
+    }
   };
 
   const logout = () => {
-    switchRole('candidate');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    sessionStorage.removeItem('access_token');
+    sessionStorage.removeItem('refresh_token');
+    setUser(null);
+    setRoleConflict(null);
+    toast.success('Signed out of workspace.');
   };
 
+  const switchRole = async (role: 'candidate' | 'organizer' | 'recruiter') => {
+    const demoAccounts = {
+      candidate: { email: 'alex@demo.local', pass: 'Demo1234!' },
+      recruiter: { email: 'recruiter@demo.local', pass: 'Demo1234!' },
+      organizer: { email: 'organizer@demo.local', pass: 'Demo1234!' },
+    };
+    const target = demoAccounts[role];
+    await login(target.email, target.pass);
+  };
+
+  const refreshUser = async () => {
+    try {
+      const me = await authService.getMe();
+      setUser(me);
+    } catch {
+      // Ignore
+    }
+  };
+
+  const clearRoleConflict = () => setRoleConflict(null);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, switchRole }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        roleConflict,
+        login,
+        register,
+        googleSignIn,
+        logout,
+        switchRole,
+        refreshUser,
+        clearRoleConflict,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -107,6 +168,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
   return ctx;
 }

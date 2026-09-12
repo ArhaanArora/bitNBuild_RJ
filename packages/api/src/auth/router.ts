@@ -2,73 +2,170 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import { randomBytes } from 'crypto';
 import { db } from '../db';
-import { users, profiles } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { users, profiles, passwordResets, emailVerifications, auditLogs } from '../db/schema';
+import { eq, and, gt } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
 
 export const authRouter = Router();
 
 const registerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(8).optional(),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   role: z.enum(['candidate', 'organizer', 'recruiter']).default('candidate'),
+  authProvider: z.enum(['email', 'google']).default('email'),
+  workEmail: z.string().optional(),
+  jobTitle: z.string().optional(),
+  organizationName: z.string().optional(),
+  eventName: z.string().optional(),
+  education: z.string().optional(),
+  skills: z.string().optional(),
+  location: z.string().optional(),
 });
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string(),
+  password: z.string().min(1),
 });
 
 function signTokens(payload: { id: string; email: string; role: string }) {
-  const access = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '15m' });
+  const access = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '2h' });
   const refresh = jwt.sign({ id: payload.id }, process.env.JWT_REFRESH_SECRET!, { expiresIn: '7d' });
   return { access, refresh };
 }
 
-// POST /api/auth/register
+// ─── 1. REGISTER (Progressive Profiling Step 1 & 2) ──────────────────────────
 authRouter.post('/register', async (req, res) => {
   try {
     const parsed = registerSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+    }
 
-    const { email, password, firstName, lastName, role } = parsed.data;
+    const {
+      email, password, firstName, lastName, role, authProvider,
+      workEmail, jobTitle, organizationName, eventName, education, location
+    } = parsed.data;
 
-    const existing = await db.query.users.findFirst({ where: eq(users.email, email) });
-    if (existing) return res.status(409).json({ error: 'Email already registered' });
+    // Check for existing account & Role Conflict (§3.1, §9)
+    const existing = await db.query.users.findFirst({ where: eq(users.email, email.toLowerCase()) });
+    if (existing) {
+      const existingRoleCapitalized = existing.role.charAt(0).toUpperCase() + existing.role.slice(1);
+      return res.status(409).json({
+        error: `This account already has a ${existingRoleCapitalized} profile. Please continue with your existing role.`,
+        roleConflict: true,
+        existingRole: existing.role,
+      });
+    }
 
-    const passwordHash = await bcrypt.hash(password, 12);
-    const [user] = await db.insert(users).values({ email, passwordHash, role }).returning();
-    await db.insert(profiles).values({ userId: user.id, firstName, lastName });
+    const rawPassword = password || 'SkillVerifyGoogleOAuth123!';
+    const passwordHash = await bcrypt.hash(rawPassword, 12);
+
+    const [user] = await db.insert(users).values({
+      email: email.toLowerCase(),
+      passwordHash,
+      role,
+      emailVerified: authProvider === 'google', // Google OAuth provides pre-verified email
+      profileCompleted: true,
+      verificationStatus: 'PENDING',
+      status: 'active',
+      lastLoginAt: new Date(),
+      workEmail: workEmail || null,
+      jobTitle: jobTitle || null,
+      organizationName: organizationName || null,
+      eventName: eventName || null,
+    }).returning();
+
+    await db.insert(profiles).values({
+      userId: user.id,
+      firstName,
+      lastName,
+      education: education || null,
+      bio: location ? `Location: ${location}` : null,
+    });
+
+    // Generate initial verification token for email signups
+    if (authProvider === 'email') {
+      const verificationToken = randomBytes(24).toString('hex');
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      await db.insert(emailVerifications).values({
+        userId: user.id,
+        token: verificationToken,
+        expiresAt,
+      });
+    }
 
     const tokens = signTokens({ id: user.id, email: user.email, role: user.role });
-    res.status(201).json({ user: { id: user.id, email, role, firstName, lastName }, ...tokens });
+    res.status(201).json({
+      message: `Welcome back, ${firstName}. Your ${user.role} workspace is ready.`,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        firstName,
+        lastName,
+        emailVerified: user.emailVerified,
+        verificationStatus: user.verificationStatus,
+        status: user.status,
+      },
+      ...tokens,
+    });
   } catch (err: any) {
     console.error('Registration error:', err);
     res.status(500).json({ error: 'Server error during registration: ' + (err.message || 'Unknown error') });
   }
 });
 
-// POST /api/auth/login
+// ─── 2. CENTRAL LOGIN (§2, §9) ───────────────────────────────────────────────
 authRouter.post('/login', async (req, res) => {
   try {
     const parsed = loginSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+    }
 
     const { email, password } = parsed.data;
-    const user = await db.query.users.findFirst({ where: eq(users.email, email) });
-    if (!user) return res.status(401).json({ error: 'Invalid credentials. User does not exist.' });
+    const user = await db.query.users.findFirst({ where: eq(users.email, email.toLowerCase()) });
+    
+    // Standard secure error copy (§9)
+    if (!user) {
+      return res.status(401).json({ error: "We couldn't sign you in. Check your email and password and try again." });
+    }
+
+    // Account suspension check (§7, §9)
+    if (user.status === 'suspended') {
+      return res.status(403).json({
+        error: 'Your account is currently under review. Contact support for details.',
+        status: 'suspended',
+      });
+    }
 
     const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) return res.status(401).json({ error: 'Invalid password. Please check your password.' });
+    if (!valid) {
+      return res.status(401).json({ error: "We couldn't sign you in. Check your email and password and try again." });
+    }
+
+    // Update lastLoginAt
+    await db.update(users).set({ lastLoginAt: new Date(), updatedAt: new Date() }).where(eq(users.id, user.id));
 
     const profile = await db.query.profiles.findFirst({ where: eq(profiles.userId, user.id) });
     const tokens = signTokens({ id: user.id, email: user.email, role: user.role });
 
     res.json({
-      user: { id: user.id, email: user.email, role: user.role, firstName: profile?.firstName, lastName: profile?.lastName },
+      message: `Welcome back, ${profile?.firstName || 'User'}. Your ${user.role} workspace is ready.`,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        firstName: profile?.firstName,
+        lastName: profile?.lastName,
+        emailVerified: user.emailVerified,
+        verificationStatus: user.verificationStatus,
+        status: user.status,
+      },
       ...tokens,
     });
   } catch (err: any) {
@@ -77,27 +174,247 @@ authRouter.post('/login', async (req, res) => {
   }
 });
 
-// POST /api/auth/refresh
-authRouter.post('/refresh', async (req, res) => {
-  const { refreshToken } = req.body;
-  if (!refreshToken) return res.status(401).json({ error: 'Refresh token required' });
-
+// ─── 3. GOOGLE OAUTH (§6) ────────────────────────────────────────────────────
+authRouter.post('/google', async (req, res) => {
   try {
-    const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { id: string };
-    const user = await db.query.users.findFirst({ where: eq(users.id, payload.id) });
-    if (!user) return res.status(401).json({ error: 'User not found' });
+    const { email, name, role, photoUrl } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email required for Google authentication' });
 
-    const tokens = signTokens({ id: user.id, email: user.email, role: user.role });
-    res.json(tokens);
-  } catch {
-    res.status(401).json({ error: 'Invalid refresh token' });
+    const normalizedEmail = email.toLowerCase();
+    const existing = await db.query.users.findFirst({ where: eq(users.email, normalizedEmail) });
+
+    if (existing) {
+      if (existing.status === 'suspended') {
+        return res.status(403).json({
+          error: 'Your account is currently under review. Contact support for details.',
+          status: 'suspended',
+        });
+      }
+
+      await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, existing.id));
+      const profile = await db.query.profiles.findFirst({ where: eq(profiles.userId, existing.id) });
+      const tokens = signTokens({ id: existing.id, email: existing.email, role: existing.role });
+
+      return res.json({
+        message: `Welcome back, ${profile?.firstName || 'User'}. Your ${existing.role} workspace is ready.`,
+        user: {
+          id: existing.id,
+          email: existing.email,
+          role: existing.role,
+          firstName: profile?.firstName,
+          lastName: profile?.lastName,
+          emailVerified: existing.emailVerified,
+          verificationStatus: existing.verificationStatus,
+          status: existing.status,
+        },
+        ...tokens,
+      });
+    }
+
+    // If new user without role selected yet, inform client to proceed to Step 2
+    if (!role) {
+      return res.json({
+        isNewUser: true,
+        email: normalizedEmail,
+        name: name || '',
+        message: 'Google identity authenticated. Please select your workspace role.',
+      });
+    }
+
+    // Create new user with Google auth pre-verified
+    const parts = (name || 'Google User').split(' ');
+    const firstName = parts[0] || 'Google';
+    const lastName = parts.slice(1).join(' ') || 'User';
+
+    const passwordHash = await bcrypt.hash(randomBytes(16).toString('hex'), 12);
+    const [newUser] = await db.insert(users).values({
+      email: normalizedEmail,
+      passwordHash,
+      role,
+      emailVerified: true, // Google pre-verified
+      profileCompleted: true,
+      verificationStatus: 'PENDING',
+      status: 'active',
+      lastLoginAt: new Date(),
+    }).returning();
+
+    await db.insert(profiles).values({
+      userId: newUser.id,
+      firstName,
+      lastName,
+      photoUrl: photoUrl || null,
+    });
+
+    const tokens = signTokens({ id: newUser.id, email: newUser.email, role: newUser.role });
+    res.status(201).json({
+      message: `Welcome back, ${firstName}. Your ${newUser.role} workspace is ready.`,
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        role: newUser.role,
+        firstName,
+        lastName,
+        emailVerified: true,
+        verificationStatus: 'PENDING',
+        status: 'active',
+      },
+      ...tokens,
+    });
+  } catch (err: any) {
+    console.error('Google auth error:', err);
+    res.status(500).json({ error: 'Server error during Google authentication' });
   }
 });
 
-// GET /api/auth/me
+// ─── 4. PASSWORD RECOVERY (§6) ───────────────────────────────────────────────
+authRouter.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email required' });
+
+    const normalizedEmail = email.toLowerCase();
+    const user = await db.query.users.findFirst({ where: eq(users.email, normalizedEmail) });
+
+    if (user) {
+      const resetToken = randomBytes(24).toString('hex');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await db.insert(passwordResets).values({
+        email: normalizedEmail,
+        token: resetToken,
+        expiresAt,
+      });
+
+      return res.json({
+        message: 'If an account exists with that email, a password recovery link has been generated.',
+        demoToken: resetToken, // Exposed for hackathon speed and local demonstration
+      });
+    }
+
+    res.json({ message: 'If an account exists with that email, a password recovery link has been generated.' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to process password recovery request' });
+  }
+});
+
+authRouter.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword || newPassword.length < 8) {
+      return res.status(400).json({ error: 'Token and minimum 8-character password required' });
+    }
+
+    const record = await db.query.passwordResets.findFirst({
+      where: and(eq(passwordResets.token, token), gt(passwordResets.expiresAt, new Date())),
+    });
+
+    if (!record || record.usedAt) {
+      return res.status(400).json({ error: 'Password reset link is invalid or has expired' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.email, record.email));
+    await db.update(passwordResets).set({ usedAt: new Date() }).where(eq(passwordResets.id, record.id));
+
+    res.json({ message: 'Password updated successfully. You may now sign in with your new credentials.' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+
+// ─── 5. EMAIL VERIFICATION (§6, §9) ──────────────────────────────────────────
+authRouter.post('/verify-email', async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ error: 'Verification token required' });
+
+    const record = await db.query.emailVerifications.findFirst({
+      where: and(eq(emailVerifications.token, token), gt(emailVerifications.expiresAt, new Date())),
+    });
+
+    if (!record || record.verifiedAt) {
+      return res.status(400).json({ error: 'Verification link is invalid or has expired' });
+    }
+
+    await db.update(users).set({ emailVerified: true, updatedAt: new Date() }).where(eq(users.id, record.userId));
+    await db.update(emailVerifications).set({ verifiedAt: new Date() }).where(eq(emailVerifications.id, record.id));
+
+    res.json({ message: 'Email verified successfully!' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to verify email' });
+  }
+});
+
+authRouter.post('/resend-verification', requireAuth, async (req, res) => {
+  try {
+    const verificationToken = randomBytes(24).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await db.insert(emailVerifications).values({
+      userId: req.user!.id,
+      token: verificationToken,
+      expiresAt,
+    });
+
+    res.json({
+      message: "We've sent a verification email. Please verify your email before continuing.",
+      demoToken: verificationToken,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to generate verification token' });
+  }
+});
+
+// ─── 6. GET CURRENT USER PROFILE (§4, §5) ────────────────────────────────────
 authRouter.get('/me', requireAuth, async (req, res) => {
-  const user = await db.query.users.findFirst({ where: eq(users.id, req.user!.id) });
-  if (!user) return res.status(404).json({ error: 'Not found' });
-  const profile = await db.query.profiles.findFirst({ where: eq(profiles.userId, user.id) });
-  res.json({ id: user.id, email: user.email, role: user.role, profile });
+  try {
+    const user = await db.query.users.findFirst({ where: eq(users.id, req.user!.id) });
+    if (!user) return res.status(404).json({ error: 'User profile not found' });
+    
+    const profile = await db.query.profiles.findFirst({ where: eq(profiles.userId, user.id) });
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      emailVerified: user.emailVerified,
+      profileCompleted: user.profileCompleted,
+      verificationStatus: user.verificationStatus,
+      status: user.status,
+      lastLoginAt: user.lastLoginAt,
+      firstName: profile?.firstName,
+      lastName: profile?.lastName,
+      photoUrl: profile?.photoUrl,
+      profile,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to fetch user context' });
+  }
+});
+
+// ─── 7. ACCOUNT DELETION (§6) ────────────────────────────────────────────────
+authRouter.post('/delete-account', requireAuth, async (req, res) => {
+  try {
+    const { confirmation } = req.body;
+    if (confirmation !== 'DELETE MY ACCOUNT') {
+      return res.status(400).json({ error: 'Confirmation phrase mismatch. Type "DELETE MY ACCOUNT" to proceed.' });
+    }
+
+    const userId = req.user!.id;
+    // Log audit trail
+    await db.insert(auditLogs).values({
+      actorId: userId,
+      actorEmail: req.user!.email,
+      actorRole: req.user!.role,
+      action: 'USER_ACCOUNT_DELETED',
+      entityType: 'USER',
+      entityId: userId,
+      reason: 'User self-service account deletion',
+    });
+
+    await db.delete(users).where(eq(users.id, userId));
+    res.json({ message: 'Account permanently erased in compliance with data privacy policies.' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to complete account deletion' });
+  }
 });

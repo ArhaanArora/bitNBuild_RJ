@@ -1,12 +1,21 @@
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import AppShell from './components/AppShell';
+import AuthGuard from './components/AuthGuard';
+import RoleGuard from './components/RoleGuard';
+import AdminGuard from './components/AdminGuard';
 
 // Auth
 import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
+import Signup from './pages/auth/Signup';
+import ForgotPassword from './pages/auth/ForgotPassword';
 
-// Candidate
+// Admin Domain (Isolated Surface)
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminSecurityConsole from './pages/admin/AdminSecurityConsole';
+
+// Candidate Workspace
 import Dashboard from './pages/dashboard/Dashboard';
 import ProfileEditor from './pages/profile/ProfileEditor';
 import SkillsPage from './pages/skills/SkillsPage';
@@ -19,41 +28,75 @@ import FindTeammatePage from './pages/hackathon/FindTeammatePage';
 import TeamDetail from './pages/teams/TeamDetail';
 import DiscoverCandidates from './pages/teams/DiscoverCandidates';
 
-// Organizer
+// Organizer Workspace
 import CreateHackathon from './pages/organizer/CreateHackathon';
 import AssessmentBuilder from './pages/organizer/AssessmentBuilder';
 
-// Recruiter
+// Recruiter Workspace
 import CandidateSearch from './pages/recruiter/CandidateSearch';
 
-// Shared
+// Shared & Public
 import PublicProfile from './pages/verify/PublicProfile';
 import ProjectReportPage from './pages/verify/ProjectReportPage';
-import AdminDashboard from './pages/admin/AdminDashboard';
 import HiringHub from './pages/hiring/HiringHub';
 import StrictAssessmentRunner from './pages/hiring/StrictAssessmentRunner';
 import StrictAssessmentResult from './pages/hiring/StrictAssessmentResult';
 
-function ProtectedRoute({ children }: { children: React.ReactNode; roles?: string[] }) {
-  const { loading } = useAuth();
-  if (loading) return <div className="min-h-screen bg-gray-950 flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full" /></div>;
-  return <>{children}</>;
+function RootRedirect() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0D0D0F] flex flex-col items-center justify-center gap-3">
+        <div className="w-8 h-8 rounded-full border-2 border-[#E8672E] border-t-transparent animate-spin" />
+        <p className="text-xs text-[#6B6B70] tracking-wider uppercase">Loading workspace...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role === 'recruiter') return <Navigate to="/hiring" replace />;
+  if (user.role === 'organizer') return <Navigate to="/hackathons" replace />;
+  return <Navigate to="/dashboard" replace />;
 }
 
 export default function App() {
-  const { loading } = useAuth();
-  if (loading) return <div className="min-h-screen bg-gray-950 flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full" /></div>;
-
   return (
     <Routes>
-      {/* Direct access to Dashboard without Login page */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/login" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/register" element={<Navigate to="/dashboard" replace />} />
+      {/* Root Dynamic Workspace Dispatcher */}
+      <Route path="/" element={<RootRedirect />} />
+
+      {/* Centralized Authentication Entry Points (§2, §3, §6) */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/register" element={<Navigate to="/signup" replace />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify/:userId" element={<PublicProfile />} />
 
-      {/* Main Dashboard & Features inside AppShell */}
-      <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
+      {/* Isolated Admin Domain (§1, §8) */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route
+        path="/admin/security"
+        element={
+          <AdminGuard minTier="support_admin">
+            <AdminSecurityConsole />
+          </AdminGuard>
+        }
+      />
+      <Route path="/admin" element={<Navigate to="/admin/security" replace />} />
+
+      {/* Role-Guarded Workspaces inside AppShell (§4) */}
+      <Route
+        element={
+          <AuthGuard>
+            <AppShell />
+          </AuthGuard>
+        }
+      >
+        {/* Candidate & Shared Routes */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<ProfileEditor />} />
         <Route path="/skills" element={<SkillsPage />} />
@@ -63,33 +106,81 @@ export default function App() {
         <Route path="/hackathons/find-teammates" element={<FindTeammatePage />} />
         <Route path="/buddy" element={<FindTeammatePage />} />
         <Route path="/hiring" element={<HiringHub />} />
-        <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/teams/:id" element={<TeamDetail />} />
         <Route path="/teams/:id/discover" element={<DiscoverCandidates />} />
 
-        {/* Organizer */}
-        <Route path="/organizer/hackathons/new" element={<CreateHackathon />} />
-        <Route path="/organizer/assessments" element={<AssessmentBuilder />} />
+        {/* Recruiter-Only Isolated Routes (§4) */}
+        <Route
+          path="/recruiter/search"
+          element={
+            <RoleGuard allowedRoles={['recruiter']}>
+              <CandidateSearch />
+            </RoleGuard>
+          }
+        />
 
-        {/* Recruiter */}
-        <Route path="/recruiter/search" element={<CandidateSearch />} />
+        {/* Organizer-Only Isolated Routes (§4) */}
+        <Route
+          path="/organizer/hackathons/new"
+          element={
+            <RoleGuard allowedRoles={['organizer']}>
+              <CreateHackathon />
+            </RoleGuard>
+          }
+        />
+        <Route
+          path="/organizer/assessments"
+          element={
+            <RoleGuard allowedRoles={['organizer']}>
+              <AssessmentBuilder />
+            </RoleGuard>
+          }
+        />
 
-        {/* 3D AI Project Verification & Trust Constellation */}
+        {/* 3D Project Verification & Trust Constellation */}
         <Route path="/project/:id/report" element={<ProjectReportPage />} />
         <Route path="/analysis/report" element={<ProjectReportPage />} />
         <Route path="/analysis/:id" element={<ProjectReportPage />} />
       </Route>
 
-      {/* Assessment (full-screen, no shell) */}
-      <Route path="/assessment/:sessionId" element={<AssessmentRunner />} />
-      <Route path="/assessment/:sessionId/result" element={<AssessmentResult />} />
+      {/* Proctored Assessment Fullscreen Runner (No Shell Chrome) */}
+      <Route
+        path="/assessment/:sessionId"
+        element={
+          <AuthGuard>
+            <AssessmentRunner />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path="/assessment/:sessionId/result"
+        element={
+          <AuthGuard>
+            <AssessmentResult />
+          </AuthGuard>
+        }
+      />
 
-      {/* Strict Resume Verification Assessment (zero-chrome, proctored) */}
-      <Route path="/hiring/assessment/:assessmentId" element={<StrictAssessmentRunner />} />
-      <Route path="/hiring/assessment/:assessmentId/result" element={<StrictAssessmentResult />} />
+      {/* Strict Resume Verification Assessment (Zero-Chrome, Proctored) */}
+      <Route
+        path="/hiring/assessment/:assessmentId"
+        element={
+          <AuthGuard>
+            <StrictAssessmentRunner />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path="/hiring/assessment/:assessmentId/result"
+        element={
+          <AuthGuard>
+            <StrictAssessmentResult />
+          </AuthGuard>
+        }
+      />
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<RootRedirect />} />
     </Routes>
   );
 }

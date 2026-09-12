@@ -13,7 +13,6 @@ import {
   User,
   Search,
   ChevronDown,
-  Shield,
   LogOut,
   Sparkles,
 } from 'lucide-react';
@@ -25,15 +24,32 @@ interface NavItem {
   section?: string;
 }
 
-const navItems: NavItem[] = [
+const candidateNav: NavItem[] = [
   { to: '/dashboard', label: 'Home', icon: Home, section: 'HOME' },
-  { to: '/skills', label: 'My Skills', icon: CheckSquare, section: 'PROFILE' },
+  { to: '/skills', label: 'My Skills', icon: CheckSquare, section: 'EVIDENCE' },
   { to: '/projects', label: 'My Projects', icon: FolderKanban },
+  { to: '/hiring?tab=assessment', label: 'Skill Verification', icon: CheckSquare },
   { to: '/hackathons', label: 'Hackathons', icon: Rocket, section: 'OPPORTUNITIES' },
-  { to: '/hiring', label: 'Hiring', icon: Briefcase },
   { to: '/hackathons/find-teammates', label: 'Find Teammates', icon: Users, section: 'DISCOVER' },
-  { to: '/recruiter/search', label: 'Find Talent', icon: UserCheck },
+  { to: '/hiring?tab=status', label: 'Applications', icon: Briefcase },
   { to: '/profile', label: 'Profile', icon: User, section: 'ACCOUNT' },
+];
+
+const recruiterNav: NavItem[] = [
+  { to: '/hiring', label: 'Dashboard', icon: Home, section: 'HOME' },
+  { to: '/hiring?tab=discovery', label: 'Candidates', icon: UserCheck, section: 'TALENT' },
+  { to: '/recruiter/search', label: 'Search Talent', icon: Search },
+  { to: '/hiring?tab=shortlisted', label: 'Shortlists', icon: CheckSquare },
+  { to: '/hiring?tab=requirements', label: 'Job Posts', icon: Briefcase, section: 'OPPORTUNITIES' },
+  { to: '/profile', label: 'Organization Profile', icon: User, section: 'ACCOUNT' },
+];
+
+const organizerNav: NavItem[] = [
+  { to: '/hackathons', label: 'Dashboard', icon: Home, section: 'HOME' },
+  { to: '/organizer/hackathons/new', label: 'Create Hackathon', icon: Rocket, section: 'EVENTS' },
+  { to: '/organizer/assessments', label: 'Assessment Builder', icon: CheckSquare },
+  { to: '/hackathons/find-teammates', label: 'Team Formation', icon: Users, section: 'COMMUNITY' },
+  { to: '/profile', label: 'Organizer Profile', icon: User, section: 'ACCOUNT' },
 ];
 
 export default function AppShell() {
@@ -42,6 +58,13 @@ export default function AppShell() {
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  const navItems =
+    user?.role === 'recruiter'
+      ? recruiterNav
+      : user?.role === 'organizer'
+      ? organizerNav
+      : candidateNav;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,16 +251,12 @@ export default function AppShell() {
                       <User className="w-3.5 h-3.5" />
                       <span>Edit Profile</span>
                     </NavLink>
-                    <NavLink
-                      to="/admin"
-                      className="flex items-center gap-2 px-3 py-1.5 text-xs text-[#A3A3A8] hover:text-white hover:bg-[#1E1E22]"
-                    >
-                      <Shield className="w-3.5 h-3.5" />
-                      <span>Admin Audit</span>
-                    </NavLink>
                     <button
                       type="button"
-                      onClick={() => logout()}
+                      onClick={() => {
+                        logout();
+                        navigate('/login');
+                      }}
                       className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[#E0554E] hover:bg-[#2A1717] text-left"
                     >
                       <LogOut className="w-3.5 h-3.5" />

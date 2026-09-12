@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './hooks/useAuth';
+import { AdminAuthProvider } from './hooks/useAdminAuth';
 import App from './App';
 import './index.css';
 
@@ -10,15 +11,17 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            style: { background: '#1f2937', color: '#f3f4f6', border: '1px solid #374151' },
-            success: { iconTheme: { primary: '#10b981', secondary: '#f3f4f6' } },
-            error: { iconTheme: { primary: '#ef4444', secondary: '#f3f4f6' } },
-          }}
-        />
+        <AdminAuthProvider>
+          <App />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: { background: '#17171A', color: '#F5F5F4', border: '1px solid #2A2A2E' },
+              success: { iconTheme: { primary: '#3FB65F', secondary: '#0D0D0F' } },
+              error: { iconTheme: { primary: '#E0554E', secondary: '#0D0D0F' } },
+            }}
+          />
+        </AdminAuthProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>
