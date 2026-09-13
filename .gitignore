@@ -66,5 +66,6 @@ next-env.d.ts
 # Uploads
 uploads/
 .env*
-!.env.example
+!*.env.example
 !packages/**/.env.example
+!packages/client/.env.production
