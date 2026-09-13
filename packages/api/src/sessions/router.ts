@@ -8,11 +8,16 @@ import {
 import { eq, and } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
 
+import os from 'os';
+
 export const sessionsRouter = Router();
 
-const uploadDir = process.env.UPLOAD_DIR || './uploads';
+const uploadDir = process.env.UPLOAD_DIR || (process.env.VERCEL ? os.tmpdir() : './uploads');
 const storage = multer.diskStorage({
-  destination: uploadDir,
+  destination: (_req, _file, cb) => {
+    const dir = process.env.VERCEL ? os.tmpdir() : uploadDir;
+    cb(null, dir);
+  },
   filename: (_req, file, cb) => cb(null, `rw-${Date.now()}-${file.originalname}`),
 });
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });

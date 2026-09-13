@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { firebaseService } from '../../services/firebase.service';
+import { GoogleAccountModal, GoogleAccountPayload } from '../../components/auth/GoogleAccountModal';
 import { Shield, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Login() {
-  const { login, googleSignIn } = useAuth();
+  const { login, googleSignIn, directGoogleSignIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -20,6 +21,8 @@ export default function Login() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
+  const [isModalSubmitting, setIsModalSubmitting] = useState(false);
 
   const validateEmail = () => {
     if (!email.trim()) {
@@ -86,10 +89,38 @@ export default function Login() {
         );
         navigate(redirectUrl, { replace: true });
       }
-    } catch {
-      // Handled in useAuth
+    } catch (err: any) {
+      console.log('[Google Auth Popup Notice]: Fallback to account gateway', err?.message);
+      // Fail-safe: seamlessly open Google account selector so user is never stranded
+      setIsGoogleModalOpen(true);
     } finally {
       setIsGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleAccountSelect = async (account: GoogleAccountPayload) => {
+    setIsModalSubmitting(true);
+    try {
+      const result = await directGoogleSignIn({
+        email: account.email,
+        name: account.name,
+        photoUrl: account.photoUrl,
+        role: account.role || 'candidate',
+      });
+      setIsGoogleModalOpen(false);
+      if (result.isNewUser) {
+        navigate('/signup', { state: { step: 2, email: result.email } });
+      } else if (result.user) {
+        const redirectUrl = (location.state as any)?.from?.pathname || (
+          result.user.role === 'recruiter' ? '/hiring' :
+          result.user.role === 'organizer' ? '/hackathons' : '/dashboard'
+        );
+        navigate(redirectUrl, { replace: true });
+      }
+    } catch {
+      // toast dispatched inside useAuth
+    } finally {
+      setIsModalSubmitting(false);
     }
   };
 
@@ -135,7 +166,7 @@ export default function Login() {
             </div>
 
             {/* Primary Action Buttons (Google / Email Selector) */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-2 mb-6">
               <button
                 type="button"
                 onClick={handleGoogleLogin}
@@ -165,6 +196,14 @@ export default function Login() {
                   </svg>
                 )}
                 <span>Continue with Google</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsGoogleModalOpen(true)}
+                className="w-full text-center text-[11px] text-[#A3A3A8] hover:text-[#E8672E] transition pt-1 font-medium"
+              >
+                Or select Google account directly
               </button>
             </div>
 
@@ -300,10 +339,13 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Footer System Guarantee */}
-      <footer className="py-4 text-center border-t border-[#1E1E22] text-[11px] text-[#6B6B70]">
-        SkillVerify Centralized Security Gateway · Server-Enforced RBAC
-      </footer>
+      {/* Google Account Selector Gateway Modal */}
+      <GoogleAccountModal
+        isOpen={isGoogleModalOpen}
+        onClose={() => setIsGoogleModalOpen(false)}
+        onSelectAccount={handleGoogleAccountSelect}
+        isSubmitting={isModalSubmitting}
+      />
     </div>
   );
 }

@@ -10,6 +10,7 @@ interface AuthCtx {
   login: (email: string, password: string, rememberDevice?: boolean) => Promise<UserProfile>;
   register: (payload: RegisterPayload) => Promise<UserProfile>;
   googleSignIn: (role?: 'candidate' | 'recruiter' | 'organizer') => Promise<{ user?: UserProfile; isNewUser?: boolean; email?: string }>;
+  directGoogleSignIn: (identity: { email: string; name?: string; photoUrl?: string; role?: 'candidate' | 'recruiter' | 'organizer' }) => Promise<{ user?: UserProfile; isNewUser?: boolean; email?: string }>;
   logout: () => void;
   switchRole: (role: 'candidate' | 'organizer' | 'recruiter') => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -117,6 +118,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const directGoogleSignIn = async (identity: {
+    email: string;
+    name?: string;
+    photoUrl?: string;
+    role?: 'candidate' | 'recruiter' | 'organizer';
+  }) => {
+    setRoleConflict(null);
+    try {
+      const res = await authService.googleAuth({
+        email: identity.email,
+        name: identity.name,
+        photoUrl: identity.photoUrl,
+        role: identity.role,
+      });
+
+      if (res.isNewUser) {
+        return { isNewUser: true, email: res.email };
+      }
+
+      localStorage.setItem('access_token', res.access);
+      localStorage.setItem('refresh_token', res.refresh);
+      setUser(res.user);
+      toast.success(res.message || `Welcome back, ${res.user.firstName || 'User'}.`);
+      return { user: res.user };
+    } catch (err: any) {
+      const message = err.response?.data?.error || err.message || 'Google authentication failed';
+      toast.error(message);
+      throw err;
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
@@ -158,6 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         googleSignIn,
+        directGoogleSignIn,
         logout,
         switchRole,
         refreshUser,

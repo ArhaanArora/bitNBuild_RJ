@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-const pdfParse = require('pdf-parse');
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
 import { skills, candidateSkills, users } from '../db/schema';
@@ -155,6 +154,16 @@ export const resumeVerificationService = {
     // Extract text from PDF buffer
     let text = '';
     try {
+      if (typeof (globalThis as any).DOMMatrix === 'undefined') {
+        (globalThis as any).DOMMatrix = class DOMMatrix {};
+      }
+      if (typeof (globalThis as any).ImageData === 'undefined') {
+        (globalThis as any).ImageData = class ImageData {};
+      }
+      if (typeof (globalThis as any).Path2D === 'undefined') {
+        (globalThis as any).Path2D = class Path2D {};
+      }
+      const pdfParse = require('pdf-parse');
       const parsed = await pdfParse(buffer);
       text = parsed.text || '';
     } catch (err) {
@@ -165,12 +174,17 @@ export const resumeVerificationService = {
     }
 
     // Ensure uploads directory exists
-    const uploadsDir = path.resolve(process.env.UPLOAD_DIR || './uploads', 'resumes');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
+    const baseUploadDir = process.env.UPLOAD_DIR || (process.env.VERCEL ? require('os').tmpdir() : './uploads');
+    const uploadsDir = path.resolve(baseUploadDir, 'resumes');
+    try {
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      const safePath = path.join(uploadsDir, `${resumeId}.pdf`);
+      fs.writeFileSync(safePath, buffer);
+    } catch (fsErr) {
+      console.warn('[ResumeVerification] Local file write warning (memory buffer preserved):', fsErr);
     }
-    const safePath = path.join(uploadsDir, `${resumeId}.pdf`);
-    fs.writeFileSync(safePath, buffer);
 
     resumeStore.set(resumeId, {
       resumeId,

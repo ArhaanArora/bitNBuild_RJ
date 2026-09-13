@@ -45,7 +45,8 @@ app.use((req, _res, next) => {
 });
 
 // Serve uploaded files
-const uploadDir = process.env.UPLOAD_DIR || './uploads';
+import os from 'os';
+const uploadDir = process.env.UPLOAD_DIR || (process.env.VERCEL ? os.tmpdir() : './uploads');
 app.use('/uploads', express.static(path.resolve(uploadDir)));
 
 // Routes
