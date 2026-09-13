@@ -93,8 +93,10 @@ process.on('uncaughtException', (err) => {
   console.warn('Uncaught Exception captured:', err.message);
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 API running on http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`🚀 API running on http://localhost:${PORT}`);
+  });
+}
 
 export default app;
