@@ -97,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: googleUser.email,
         name: googleUser.displayName,
         photoUrl: googleUser.photoURL,
+        idToken: googleUser.idToken,
         role,
       });
 
@@ -110,7 +111,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.success(res.message || `Welcome back, ${res.user.firstName || 'User'}.`);
       return { user: res.user };
     } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Google authentication failed');
+      const message = err.response?.data?.error || err.message || 'Google authentication failed';
+      toast.error(message);
       throw err;
     }
   };
@@ -120,6 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('refresh_token');
     sessionStorage.removeItem('access_token');
     sessionStorage.removeItem('refresh_token');
+    firebaseService.signOut().catch(() => {});
     setUser(null);
     setRoleConflict(null);
     toast.success('Signed out of workspace.');

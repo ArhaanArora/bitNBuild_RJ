@@ -177,10 +177,27 @@ authRouter.post('/login', async (req, res) => {
 // ─── 3. GOOGLE OAUTH (§6) ────────────────────────────────────────────────────
 authRouter.post('/google', async (req, res) => {
   try {
-    const { email, name, role, photoUrl } = req.body;
-    if (!email) return res.status(400).json({ error: 'Email required for Google authentication' });
+    const { email, name, role, photoUrl, idToken } = req.body;
+    let authEmail = email;
+    let authName = name;
+    let authPhoto = photoUrl;
 
-    const normalizedEmail = email.toLowerCase();
+    if (idToken) {
+      try {
+        const decoded: any = jwt.decode(idToken);
+        if (decoded && decoded.email) {
+          authEmail = decoded.email;
+          if (decoded.name && !authName) authName = decoded.name;
+          if (decoded.picture && !authPhoto) authPhoto = decoded.picture;
+        }
+      } catch (tokenErr) {
+        console.warn('Firebase token decode warning:', tokenErr);
+      }
+    }
+
+    if (!authEmail) return res.status(400).json({ error: 'Email required for Google authentication' });
+
+    const normalizedEmail = authEmail.toLowerCase();
     const existing = await db.query.users.findFirst({ where: eq(users.email, normalizedEmail) });
 
     if (existing) {
@@ -216,13 +233,13 @@ authRouter.post('/google', async (req, res) => {
       return res.json({
         isNewUser: true,
         email: normalizedEmail,
-        name: name || '',
+        name: authName || '',
         message: 'Google identity authenticated. Please select your workspace role.',
       });
     }
 
     // Create new user with Google auth pre-verified
-    const parts = (name || 'Google User').split(' ');
+    const parts = (authName || 'Google User').split(' ');
     const firstName = parts[0] || 'Google';
     const lastName = parts.slice(1).join(' ') || 'User';
 
@@ -242,7 +259,7 @@ authRouter.post('/google', async (req, res) => {
       userId: newUser.id,
       firstName,
       lastName,
-      photoUrl: photoUrl || null,
+      photoUrl: authPhoto || null,
     });
 
     const tokens = signTokens({ id: newUser.id, email: newUser.email, role: newUser.role });

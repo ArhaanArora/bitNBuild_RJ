@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../../services/auth.service';
+import { firebaseService } from '../../services/firebase.service';
 import { KeyRound, CheckCircle2, ArrowLeft, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -20,7 +21,14 @@ export default function ForgotPassword() {
 
     setIsRequesting(true);
     try {
-      const res = await authService.forgotPassword(email);
+      if (firebaseService.isConfigured()) {
+        try {
+          await firebaseService.sendPasswordReset(email.trim());
+        } catch (fbErr: any) {
+          console.log('[Firebase Reset]:', fbErr.message);
+        }
+      }
+      const res = await authService.forgotPassword(email.trim());
       setResetRequested(true);
       if (res.demoToken) {
         setToken(res.demoToken);

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { firebaseService } from '../../services/firebase.service';
 import { Shield, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -51,6 +52,14 @@ export default function Login() {
 
     setIsSubmitting(true);
     try {
+      if (firebaseService.isConfigured()) {
+        try {
+          await firebaseService.signInWithEmail(email.trim(), password);
+        } catch (fbErr: any) {
+          console.log('[Firebase login notice]:', fbErr.message);
+        }
+      }
+
       const user = await login(email, password, rememberDevice);
       const redirectUrl = (location.state as any)?.from?.pathname || (
         user.role === 'recruiter' ? '/hiring' :

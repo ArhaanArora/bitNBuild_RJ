@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { firebaseService } from '../../services/firebase.service';
 import { User, Briefcase, Calendar, Check, ArrowRight, ArrowLeft, Shield, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -94,6 +95,14 @@ export default function Signup() {
 
     setIsSubmitting(true);
     try {
+      if (authProvider === 'email' && firebaseService.isConfigured()) {
+        try {
+          await firebaseService.signUpWithEmail(email.trim(), password);
+        } catch (fbErr: any) {
+          console.warn('[Firebase Auth Register sync]:', fbErr.message);
+        }
+      }
+
       const user = await register({
         email,
         password: authProvider === 'email' ? password : undefined,
