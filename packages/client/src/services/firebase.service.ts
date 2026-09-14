@@ -9,9 +9,20 @@ import {
   sendEmailVerification,
   signOut,
   onAuthStateChanged,
+  getIdTokenResult,
   User as FirebaseUser,
   Auth,
 } from 'firebase/auth';
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  addDoc,
+  serverTimestamp,
+  Firestore,
+} from 'firebase/firestore';
 
 /**
  * Firebase Identity Architecture Layer (§1, §5, §6)
@@ -29,6 +40,13 @@ export interface FirebaseIdentityUser {
   idToken?: string;
 }
 
+export interface FirestoreUserDoc {
+  email: string;
+  role: 'candidate' | 'recruiter' | 'organizer' | 'admin';
+  accountStatus: 'active' | 'pending' | 'suspended';
+  createdAt: any;
+}
+
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
@@ -43,12 +61,14 @@ const firebaseConfig = {
 // Safe initialization
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
+let db: Firestore | null = null;
 let googleProvider: GoogleAuthProvider | null = null;
 
 try {
   if (firebaseConfig.apiKey && firebaseConfig.projectId) {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
+    db = getFirestore(app);
     googleProvider = new GoogleAuthProvider();
     googleProvider.setCustomParameters({
       prompt: 'select_account',
@@ -58,7 +78,7 @@ try {
   console.warn('[SkillVerify Firebase] Initialization warning:', err);
 }
 
-export { app, auth, googleProvider };
+export { app, auth, db, googleProvider };
 
 export const firebaseService = {
   /**
@@ -188,5 +208,71 @@ export const firebaseService = {
   onAuthStateChanged(callback: (user: FirebaseUser | null) => void) {
     if (!auth) return () => {};
     return onAuthStateChanged(auth, callback);
+  },
+
+  /**
+   * Get decoded ID token with custom claims (role verification)
+   */
+  async getIdTokenResult(forceRefresh = false) {
+    if (!auth || !auth.currentUser) return null;
+    return await getIdTokenResult(auth.currentUser, forceRefresh);
+  },
+
+  /**
+   * Read users/{uid} document from Firestore
+   */
+  async getUserDoc(uid: string): Promise<FirestoreUserDoc | null> {
+    if (!db) return null;
+    try {
+      const snap = await getDoc(doc(db, 'users', uid));
+      if (snap.exists()) {
+        return snap.data() as FirestoreUserDoc;
+      }
+      return null;
+    } catch (err) {
+      console.warn('[SkillVerify Firebase] Could not read user doc from Firestore:', err);
+      return null;
+    }
+  },
+
+  /**
+   * Store immutable role and user status in Firestore users/{uid} upon account creation
+   */
+  async setUserDoc(uid: string, data: Partial<FirestoreUserDoc>): Promise<void> {
+    if (!db) return;
+    try {
+      const userRef = doc(db, 'users', uid);
+      await setDoc(userRef, {
+        ...data,
+        createdAt: serverTimestamp(),
+      }, { merge: true });
+    } catch (err) {
+      console.warn('[SkillVerify Firebase] Could not set user doc in Firestore:', err);
+    }
+  },
+
+  /**
+   * Submit role change application to roleRequests collection in Firestore
+   */
+  async submitRoleRequest(data: {
+    uid: string;
+    email: string;
+    fromRole: string;
+    toRole: string;
+    reason: string;
+  }): Promise<string | null> {
+    if (!db) return null;
+    try {
+      const colRef = collection(db, 'roleRequests');
+      const docRef = await addDoc(colRef, {
+        ...data,
+        status: 'pending',
+        createdAt: serverTimestamp(),
+      });
+      return docRef.id;
+    } catch (err) {
+      console.warn('[SkillVerify Firebase] Could not write roleRequest to Firestore:', err);
+      return null;
+    }
   },
 };

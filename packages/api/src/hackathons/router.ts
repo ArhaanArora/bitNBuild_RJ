@@ -3,12 +3,16 @@ import { db } from '../db';
 import { hackathons, hackathonParticipants } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { requireAuth, requireRole } from '../middleware/auth';
+import { cache } from '../services/cache.service';
 
 export const hackathonsRouter = Router();
 
 // GET /api/hackathons
 hackathonsRouter.get('/', requireAuth, async (_req, res) => {
-  const rows = await db.query.hackathons.findMany({ where: eq(hackathons.isPublished, true) });
+  const rows = await cache.get('hackathons:published', () =>
+    db.query.hackathons.findMany({ where: eq(hackathons.isPublished, true) }),
+    120000
+  );
   res.json(rows);
 });
 
@@ -35,6 +39,7 @@ hackathonsRouter.post('/', requireAuth, requireRole('organizer', 'admin'), async
     requiredSkills: requiredSkills ?? [],
     isPublished: true,
   }).returning();
+  cache.del('hackathons:published');
   res.status(201).json(h);
 });
 

@@ -114,7 +114,7 @@ export default function FindTeammatePage() {
       if (res.data?.matches && res.data.matches.length > 0) {
         setDbMatches(res.data.matches);
         setIsFromDatabase(true);
-        toast.success(`Matched ${res.data.matches.length} candidates directly from PostgreSQL!`);
+        toast.success('Matched');
       } else {
         setDbMatches(null);
         setIsFromDatabase(false);

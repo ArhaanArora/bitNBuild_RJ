@@ -19,6 +19,10 @@ import { AdminCMSView } from './AdminCMSView';
 import { AdminLiveOperationsView } from './AdminLiveOperationsView';
 import { AdminFeatureFlagsView } from './AdminFeatureFlagsView';
 import { AdminAuditSecurityView } from './AdminAuditSecurityView';
+import { AdminAnalyticsView } from './AdminAnalyticsView';
+import { AdminSessionsView } from './AdminSessionsView';
+import { AdminComplianceView } from './AdminComplianceView';
+import { AdminSettingsView } from './AdminSettingsView';
 
 export default function AdminDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -115,8 +119,24 @@ export default function AdminDashboard() {
         <AdminFeatureFlagsView />
       )}
 
+      {activeTab === 'analytics' && (
+        <AdminAnalyticsView />
+      )}
+
       {activeTab === 'audit' && (
         <AdminAuditSecurityView />
+      )}
+
+      {activeTab === 'sessions' && (
+        <AdminSessionsView />
+      )}
+
+      {activeTab === 'compliance' && (
+        <AdminComplianceView />
+      )}
+
+      {activeTab === 'settings' && (
+        <AdminSettingsView />
       )}
     </AdminShell>
   );

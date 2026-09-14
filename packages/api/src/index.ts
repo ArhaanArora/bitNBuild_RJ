@@ -6,6 +6,7 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import compression from 'compression';
 
 import { authRouter } from './auth/router';
 import { profilesRouter } from './profiles/router';
@@ -26,6 +27,10 @@ import { hiringRouter } from './hiring/router';
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// ─── Compression ───────────────────────────────────────────────────────────────
+// Gzip all responses > 1KB. Reduces JSON payloads by 60-80%.
+app.use(compression({ level: 6, threshold: 1024 }));
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
@@ -38,16 +43,34 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
+// ─── Security & Cache Headers ──────────────────────────────────────────────────
+app.use((req, res, next) => {
+  // Security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  // Cache control: API responses should not be cached by default
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  next();
+});
+
 // Request logger
 app.use((req, _res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
-// Serve uploaded files
+// Serve uploaded files with aggressive caching (24h) — they are immutable after upload
 import os from 'os';
 const uploadDir = process.env.UPLOAD_DIR || (process.env.VERCEL ? os.tmpdir() : './uploads');
-app.use('/uploads', express.static(path.resolve(uploadDir)));
+app.use('/uploads', express.static(path.resolve(uploadDir), {
+  maxAge: '24h',
+  etag: true,
+  lastModified: true,
+}));
+
 
 // Routes
 app.use('/api/auth', authRouter);

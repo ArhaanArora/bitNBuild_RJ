@@ -4,14 +4,18 @@ import { db } from '../db';
 import { assessments, questions } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { requireAuth, requireRole } from '../middleware/auth';
+import { cache } from '../services/cache.service';
 
 export const assessmentsRouter = Router();
 
 // GET /api/assessments — list published assessments
 assessmentsRouter.get('/', requireAuth, async (_req, res) => {
-  const rows = await db.query.assessments.findMany({
-    where: eq(assessments.isPublished, true),
-  });
+  const rows = await cache.get('assessments:published', () =>
+    db.query.assessments.findMany({
+      where: eq(assessments.isPublished, true),
+    }),
+    120000
+  );
   res.json(rows);
 });
 
@@ -43,6 +47,7 @@ assessmentsRouter.post('/', requireAuth, requireRole('organizer', 'admin'), asyn
     title, description, skillIds, durationMinutes: durationMinutes || 30,
     createdBy: req.user!.id,
   }).returning();
+  cache.del('assessments:published');
   res.status(201).json(assessment);
 });
 
@@ -59,5 +64,7 @@ assessmentsRouter.patch('/:id/publish', requireAuth, requireRole('organizer', 'a
     .set({ isPublished: true })
     .where(eq(assessments.id, req.params.id))
     .returning();
+  if (!updated) return res.status(404).json({ error: 'Not found' });
+  cache.del('assessments:published');
   res.json(updated);
 });

@@ -86,4 +86,14 @@ export const authService = {
     const { data } = await api.post('/auth/delete-account', { confirmation });
     return data;
   },
+
+  async submitRoleRequest(toRole: string, reason: string): Promise<{ message: string; request: any }> {
+    const { data } = await api.post('/auth/role-request', { toRole, reason });
+    return data;
+  },
+
+  async getMyRoleRequests(): Promise<{ requests: any[] }> {
+    const { data } = await api.get('/auth/role-request/my');
+    return data;
+  },
 };

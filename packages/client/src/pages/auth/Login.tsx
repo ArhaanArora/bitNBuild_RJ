@@ -64,10 +64,11 @@ export default function Login() {
       }
 
       const user = await login(email, password, rememberDevice);
-      const redirectUrl = (location.state as any)?.from?.pathname || (
+      // Route to the ONE dashboard matching server-verified role (§3)
+      const redirectUrl =
         user.role === 'recruiter' ? '/hiring' :
-        user.role === 'organizer' ? '/hackathons' : '/dashboard'
-      );
+        user.role === 'organizer' ? '/hackathons' :
+        user.role === 'admin' ? '/admin/dashboard' : '/dashboard';
       navigate(redirectUrl, { replace: true });
     } catch {
       // toast is dispatched inside useAuth
@@ -83,10 +84,10 @@ export default function Login() {
       if (result.isNewUser) {
         navigate('/signup', { state: { step: 2, email: result.email } });
       } else if (result.user) {
-        const redirectUrl = (location.state as any)?.from?.pathname || (
+        const redirectUrl =
           result.user.role === 'recruiter' ? '/hiring' :
-          result.user.role === 'organizer' ? '/hackathons' : '/dashboard'
-        );
+          result.user.role === 'organizer' ? '/hackathons' :
+          result.user.role === 'admin' ? '/admin/dashboard' : '/dashboard';
         navigate(redirectUrl, { replace: true });
       }
     } catch (err: any) {
@@ -111,10 +112,10 @@ export default function Login() {
       if (result.isNewUser) {
         navigate('/signup', { state: { step: 2, email: result.email } });
       } else if (result.user) {
-        const redirectUrl = (location.state as any)?.from?.pathname || (
+        const redirectUrl =
           result.user.role === 'recruiter' ? '/hiring' :
-          result.user.role === 'organizer' ? '/hackathons' : '/dashboard'
-        );
+          result.user.role === 'organizer' ? '/hackathons' :
+          result.user.role === 'admin' ? '/admin/dashboard' : '/dashboard';
         navigate(redirectUrl, { replace: true });
       }
     } catch {

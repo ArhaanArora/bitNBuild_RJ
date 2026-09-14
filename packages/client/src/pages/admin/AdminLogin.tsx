@@ -19,7 +19,7 @@ export default function AdminLogin() {
     setLoading(true);
     try {
       await adminLogin(email, password);
-      navigate('/admin/security', { replace: true });
+      navigate('/admin/dashboard', { replace: true });
     } catch {
       // Toast dispatched in useAdminAuth
     } finally {

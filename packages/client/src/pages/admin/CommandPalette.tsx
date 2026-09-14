@@ -53,9 +53,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       action: () => { onSelectTab('overview'); onClose(); }
     },
     {
+      id: 'analytics',
+      title: 'Platform Analytics & Business Intelligence Impact',
+      category: 'Executive',
+      icon: <Activity className="w-4 h-4 text-blue-400" />,
+      badge: 'BI',
+      action: () => { onSelectTab('analytics'); onClose(); }
+    },
+    {
       id: 'ai_inference',
       title: 'AI Inference Architecture (Section 20A Model Routing & Budgets)',
-      category: 'Navigation',
+      category: 'Executive',
       icon: <Cpu className="w-4 h-4 text-purple-400" />,
       badge: 'Section 20A',
       action: () => { onSelectTab('ai_inference'); onClose(); }
@@ -63,38 +71,95 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     {
       id: 'candidates',
       title: 'Candidates Directory & Verification Passports',
-      category: 'Navigation',
+      category: 'Ecosystem',
       icon: <Users className="w-4 h-4 text-blue-400" />,
       action: () => { onSelectTab('candidates'); onClose(); }
     },
     {
+      id: 'recruiters',
+      title: 'Recruiters & Talent Partners Directory',
+      category: 'Ecosystem',
+      icon: <Users className="w-4 h-4 text-sky-400" />,
+      action: () => { onSelectTab('recruiters'); onClose(); }
+    },
+    {
+      id: 'organizers',
+      title: 'Hackathon Organizers & Events Directory',
+      category: 'Ecosystem',
+      icon: <Users className="w-4 h-4 text-indigo-400" />,
+      action: () => { onSelectTab('organizers'); onClose(); }
+    },
+    {
       id: 'organizations',
       title: 'Client Organizations & KYB Gating',
-      category: 'Navigation',
+      category: 'Ecosystem',
       icon: <Building className="w-4 h-4 text-amber-400" />,
-      badge: 'Gated',
+      badge: 'KYB',
       action: () => { onSelectTab('organizations'); onClose(); }
+    },
+    {
+      id: 'users_rbac',
+      title: 'Users & RBAC Tier Permissions',
+      category: 'Ecosystem',
+      icon: <Shield className="w-4 h-4 text-rose-400" />,
+      action: () => { onSelectTab('users_rbac'); onClose(); }
     },
     {
       id: 'verifications',
       title: 'Verification Moderation Queue',
-      category: 'Navigation',
+      category: 'Verification',
       icon: <Shield className="w-4 h-4 text-emerald-400" />,
       action: () => { onSelectTab('verifications'); onClose(); }
     },
     {
+      id: 'skills_taxonomy',
+      title: 'Canonical Skills Taxonomy & Aliases',
+      category: 'Verification',
+      icon: <Activity className="w-4 h-4 text-teal-400" />,
+      action: () => { onSelectTab('skills_taxonomy'); onClose(); }
+    },
+    {
+      id: 'hackathons_teams',
+      title: 'Hackathons & Squad Formations',
+      category: 'Verification',
+      icon: <Activity className="w-4 h-4 text-amber-400" />,
+      action: () => { onSelectTab('hackathons_teams'); onClose(); }
+    },
+    {
       id: 'inbox',
       title: 'Unified Inquiries Inbox & AI Triage',
-      category: 'Navigation',
+      category: 'Content',
       icon: <Mail className="w-4 h-4 text-rose-400" />,
       action: () => { onSelectTab('inbox'); onClose(); }
     },
     {
       id: 'cms',
       title: 'Website CMS & Public Live Sync',
-      category: 'Navigation',
+      category: 'Content',
       icon: <Globe className="w-4 h-4 text-cyan-400" />,
       action: () => { onSelectTab('cms'); onClose(); }
+    },
+    {
+      id: 'sessions',
+      title: 'Active Admin Sessions & Perimeter Access',
+      category: 'Security',
+      icon: <Shield className="w-4 h-4 text-emerald-400" />,
+      action: () => { onSelectTab('sessions'); onClose(); }
+    },
+    {
+      id: 'compliance',
+      title: 'GDPR Compliance & Data Rights (Erasure / Export)',
+      category: 'Security',
+      icon: <FileText className="w-4 h-4 text-yellow-400" />,
+      badge: 'GDPR',
+      action: () => { onSelectTab('compliance'); onClose(); }
+    },
+    {
+      id: 'audit',
+      title: 'Cryptographic Immutable Audit Trail',
+      category: 'Security',
+      icon: <FileText className="w-4 h-4 text-gray-400" />,
+      action: () => { onSelectTab('audit'); onClose(); }
     },
     {
       id: 'live_operations',
@@ -111,11 +176,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       action: () => { onSelectTab('feature_flags'); onClose(); }
     },
     {
-      id: 'audit',
-      title: 'Cryptographic Immutable Audit Trail',
-      category: 'Security',
-      icon: <FileText className="w-4 h-4 text-gray-400" />,
-      action: () => { onSelectTab('audit'); onClose(); }
+      id: 'settings',
+      title: 'Platform Settings & Infrastructure Health',
+      category: 'Operations',
+      icon: <Activity className="w-4 h-4 text-gray-400" />,
+      action: () => { onSelectTab('settings'); onClose(); }
     },
     {
       id: 'action_flush_cache',

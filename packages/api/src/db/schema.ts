@@ -379,6 +379,24 @@ export const emailVerifications = pgTable('email_verifications', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// ─── Role Requests (Server-Side Governance) ──────────────────────────────────
+
+export const roleRequests = pgTable('role_requests', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userEmail: text('user_email').notNull(),
+  currentRole: text('from_role').notNull(),
+  requestedRole: text('to_role').notNull(),
+  reason: text('reason').notNull(),
+  status: text('status').notNull().default('pending'), // 'pending' | 'approved' | 'rejected'
+  reviewedBy: uuid('reviewed_by'),
+  reviewNotes: text('review_notes'),
+  reviewedAt: timestamp('reviewed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+
 // ─── Files ──────────────────────────────────────────────────────────────────
 
 export const files = pgTable('files', {
@@ -534,5 +552,7 @@ export type SystemIncident = typeof systemIncidents.$inferSelect;
 export type Admin = typeof admins.$inferSelect;
 export type PasswordReset = typeof passwordResets.$inferSelect;
 export type EmailVerification = typeof emailVerifications.$inferSelect;
+export type RoleRequest = typeof roleRequests.$inferSelect;
+
 
 

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Check, AlertCircle } from 'lucide-react';
+import { Check, AlertCircle, Clock } from 'lucide-react';
 
-export type VerificationState = 'VERIFIED' | 'PARTIALLY_VERIFIED' | 'CLAIMED' | 'UNVERIFIED';
+export type VerificationState = 'VERIFIED' | 'PARTIALLY_VERIFIED' | 'CLAIMED' | 'UNVERIFIED' | 'IN_PROGRESS' | 'PARTIAL';
 
 interface VerificationBadgeProps {
   status: VerificationState | string;
@@ -21,12 +21,14 @@ export default function VerificationBadge({
   if (norm === 'VERIFIED') {
     return (
       <span
-        className={`inline-flex items-center gap-1 text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-[#16261B] text-[#3FB65F] border border-[#3FB65F]/30 ${className}`}
+        className={`badge-success ${className}`}
+        role="status"
+        aria-label={`Verified${showScore && score != null ? ` — ${score}%` : ''}`}
       >
-        <Check className="w-3 h-3 text-[#3FB65F]" />
+        <Check className="w-3 h-3" aria-hidden="true" />
         <span>Verified</span>
-        {showScore && score !== null && score !== undefined && (
-          <span className="text-[10px] text-[#3FB65F]/80 ml-0.5">{score}%</span>
+        {showScore && score != null && (
+          <span style={{ opacity: 0.75, marginLeft: '2px' }}>{score}%</span>
         )}
       </span>
     );
@@ -35,20 +37,38 @@ export default function VerificationBadge({
   if (norm === 'PARTIALLY_VERIFIED' || norm === 'IN_PROGRESS' || norm === 'PARTIAL') {
     return (
       <span
-        className={`inline-flex items-center gap-1 text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-[#2B2213] text-[#D89A3E] border border-[#D89A3E]/30 ${className}`}
+        className={`badge-warning ${className}`}
+        role="status"
+        aria-label={`Partially verified${showScore && score != null ? ` — ${score}%` : ''}`}
       >
-        <AlertCircle className="w-3 h-3 text-[#D89A3E]" />
-        <span>Partially Verified</span>
-        {showScore && score !== null && score !== undefined && (
-          <span className="text-[10px] text-[#D89A3E]/80 ml-0.5">{score}%</span>
+        <AlertCircle className="w-3 h-3" aria-hidden="true" />
+        <span>Partial</span>
+        {showScore && score != null && (
+          <span style={{ opacity: 0.75, marginLeft: '2px' }}>{score}%</span>
         )}
       </span>
     );
   }
 
+  if (norm === 'UNVERIFIED') {
+    return (
+      <span
+        className={`badge-neutral ${className}`}
+        role="status"
+        aria-label="Unverified"
+      >
+        <Clock className="w-3 h-3" aria-hidden="true" />
+        <span>Unverified</span>
+      </span>
+    );
+  }
+
+  // CLAIMED / fallback
   return (
     <span
-      className={`inline-flex items-center gap-1 text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-transparent text-[#A3A3A8] border border-[#2A2A2E] ${className}`}
+      className={`badge-neutral ${className}`}
+      role="status"
+      aria-label="Claimed"
     >
       <span>Claimed</span>
     </span>

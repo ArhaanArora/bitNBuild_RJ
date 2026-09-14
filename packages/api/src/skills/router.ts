@@ -4,15 +4,24 @@ import { db } from '../db';
 import { skills, candidateSkills } from '../db/schema';
 import { eq, and, ilike } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
+import { cache } from '../services/cache.service';
 
 export const skillsRouter = Router();
 
-// GET /api/skills — all skills (autocomplete)
+// GET /api/skills — all skills (publicly cached for 5 minutes)
 skillsRouter.get('/', async (req, res) => {
   const q = req.query.q as string | undefined;
-  const rows = q
-    ? await db.select().from(skills).where(ilike(skills.name, `%${q}%`))
-    : await db.select().from(skills);
+
+  if (q) {
+    // Search queries are not cached (dynamic)
+    const rows = await db.select().from(skills).where(ilike(skills.name, `%${q}%`));
+    res.set('Cache-Control', 'public, max-age=30'); // 30s browser cache for searches
+    return res.json(rows);
+  }
+
+  // Full catalog: serve from cache, set browser cache header
+  const rows = await cache.get('skills:all', () => db.select().from(skills));
+  res.set('Cache-Control', 'public, max-age=300'); // 5min browser cache
   res.json(rows);
 });
 

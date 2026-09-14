@@ -5,8 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SkillVerify — Turn Claims Into Proof</title>
     <meta name="description" content="Verify developer skills through AI-proctored assessments. A trust layer for skills — turning resume claims into verifiable evidence." />
+
+    <!-- DNS prefetch for API and external services -->
+    <link rel="dns-prefetch" href="//localhost" />
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+
+    <!-- Preconnect to Google Fonts (used for Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Critical font: Inter — loaded async to avoid render-blocking -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+    </noscript>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✓</text></svg>" />
+
+    <!-- Theme color for browser chrome -->
+    <meta name="theme-color" content="#0D0D0F" />
+
+    <!-- Core Stylesheet -->
+    <link rel="stylesheet" href="/src/index.css" />
   </head>
-  <body>
+  <body style="background-color: #0D0D0F; color: #F5F5F4; margin: 0; min-height: 100vh;">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

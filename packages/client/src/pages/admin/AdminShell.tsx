@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   Activity, Cpu, Users, Briefcase, Trophy, ShieldAlert, Building, ShieldCheck, 
-  Database, Mail, Globe, Server, Flag, Lock, Search, RefreshCw
+  Database, Mail, Globe, Server, Flag, Lock, Search, RefreshCw,
+  BarChart2, Key, FileCheck, Settings
 } from 'lucide-react';
 import { CommandPalette } from './CommandPalette';
 
@@ -27,6 +28,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
       title: 'Executive',
       items: [
         { id: 'overview', label: 'Command Overview', icon: <Activity className="w-4 h-4" /> },
+        { id: 'analytics', label: 'Platform Analytics', icon: <BarChart2 className="w-4 h-4" />, badge: 'BI' },
         { id: 'ai_inference', label: 'AI Inference (Sec 20A)', icon: <Cpu className="w-4 h-4" />, badge: 'AI' },
       ]
     },
@@ -56,11 +58,19 @@ export const AdminShell: React.FC<AdminShellProps> = ({
       ]
     },
     {
+      title: 'Security & Governance',
+      items: [
+        { id: 'audit', label: 'Security & Audit Trail', icon: <Lock className="w-4 h-4" /> },
+        { id: 'sessions', label: 'Active Sessions & Access', icon: <Key className="w-4 h-4" /> },
+        { id: 'compliance', label: 'GDPR & Compliance', icon: <FileCheck className="w-4 h-4" />, badge: 'GDPR' },
+      ]
+    },
+    {
       title: 'Infrastructure & Ops',
       items: [
         { id: 'live_operations', label: 'Live Operations (3D/2D)', icon: <Server className="w-4 h-4" />, badge: '3D' },
         { id: 'feature_flags', label: 'Feature Flags', icon: <Flag className="w-4 h-4" /> },
-        { id: 'audit', label: 'Security & Audit Trail', icon: <Lock className="w-4 h-4" /> },
+        { id: 'settings', label: 'Platform Settings', icon: <Settings className="w-4 h-4" /> },
       ]
     }
   ];

@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { db } from '../db';
 import { users, admins } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { cache } from '../services/cache.service';
 
 export interface AuthUser {
   id: string;
@@ -42,11 +43,14 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET!) as AuthUser;
     
-    // Server-side database verification: ensure user exists and is active
-    const user = await db.query.users.findFirst({
-      where: eq(users.id, payload.id),
-      columns: { id: true, email: true, role: true, status: true },
-    });
+    // Server-side database verification: ensure user exists and is active (30s cache)
+    const user = await cache.get(`auth:user:${payload.id}`, () =>
+      db.query.users.findFirst({
+        where: eq(users.id, payload.id),
+        columns: { id: true, email: true, role: true, status: true },
+      }),
+      30_000
+    );
 
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized: Account not found' });
@@ -89,12 +93,20 @@ export async function requireAdmin(minTier: 'super_admin' | 'security_admin' | '
     if (!token) return res.status(401).json({ error: 'Unauthorized: Admin authentication token required' });
 
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET!) as AdminUser;
-      
-      // Verify against isolated admins table
-      const admin = await db.query.admins.findFirst({
-        where: eq(admins.id, payload.id),
-      });
+      const payload = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+      // Block regular user tokens from accessing admin routes
+      if (!payload.isAdmin) {
+        return res.status(403).json({ error: 'Forbidden: This endpoint requires admin-level credentials' });
+      }
+
+      // Verify against isolated admins table (30s cache)
+      const admin = await cache.get(`auth:admin:${payload.id}`, () =>
+        db.query.admins.findFirst({
+          where: eq(admins.id, payload.id),
+        }),
+        30_000
+      );
 
       if (!admin || admin.status !== 'active') {
         return res.status(403).json({ error: 'Forbidden: Admin account is inactive or revoked' });
@@ -120,4 +132,44 @@ export async function requireAdmin(minTier: 'super_admin' | 'security_admin' | '
       return res.status(401).json({ error: 'Invalid or expired admin credential token' });
     }
   };
+}
+
+/**
+ * Direct middleware version of requireAdmin (support_admin tier minimum).
+ * Use this with router.use() for global route protection.
+ */
+export async function requireAdminMiddleware(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!token) return res.status(401).json({ error: 'Unauthorized: Admin authentication token required' });
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+    // Block regular user tokens from accessing admin routes
+    if (!payload.isAdmin) {
+      return res.status(403).json({ error: 'Forbidden: This endpoint requires admin-level credentials' });
+    }
+
+    const admin = await cache.get(`auth:admin:${payload.id}`, () =>
+      db.query.admins.findFirst({
+        where: eq(admins.id, payload.id),
+      }),
+      30_000
+    );
+
+    if (!admin || admin.status !== 'active') {
+      return res.status(403).json({ error: 'Forbidden: Admin account is inactive or revoked' });
+    }
+
+    req.admin = {
+      id: admin.id,
+      email: admin.email,
+      adminRole: admin.adminRole,
+      name: admin.name,
+    };
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired admin credential token' });
+  }
 }

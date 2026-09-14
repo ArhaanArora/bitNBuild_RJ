@@ -7,19 +7,12 @@ import { AuditService } from '../services/audit.service';
 
 export const notificationsRouter = Router();
 
-// GET /api/notifications - List notifications for logged-in user (fallback to demo alex user if not authed)
-notificationsRouter.get('/', async (req, res) => {
+// GET /api/notifications - List notifications for logged-in user
+notificationsRouter.get('/', requireAuth, async (req, res) => {
   try {
-    let userId = (req as any).user?.id;
+    const userId = (req as any).user?.id;
     if (!userId) {
-      const defaultUser = await db.query.users.findFirst({
-        where: eq(users.email, 'alex@demo.local'),
-      });
-      userId = defaultUser?.id;
-    }
-
-    if (!userId) {
-      return res.json({ notifications: [], unreadCount: 0 });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const userNotifications = await db.query.notifications.findMany({
@@ -62,18 +55,11 @@ notificationsRouter.patch('/:id/read', async (req, res) => {
 });
 
 // PATCH /api/notifications/read-all - Mark all notifications for user as read
-notificationsRouter.patch('/read-all', async (req, res) => {
+notificationsRouter.patch('/read-all', requireAuth, async (req, res) => {
   try {
-    let userId = (req as any).user?.id;
+    const userId = (req as any).user?.id;
     if (!userId) {
-      const defaultUser = await db.query.users.findFirst({
-        where: eq(users.email, 'alex@demo.local'),
-      });
-      userId = defaultUser?.id;
-    }
-
-    if (!userId) {
-      return res.json({ success: true, updatedCount: 0 });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const updated = await db

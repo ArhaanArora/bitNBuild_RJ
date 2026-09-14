@@ -12,7 +12,7 @@ interface AuthCtx {
   googleSignIn: (role?: 'candidate' | 'recruiter' | 'organizer') => Promise<{ user?: UserProfile; isNewUser?: boolean; email?: string }>;
   directGoogleSignIn: (identity: { email: string; name?: string; photoUrl?: string; role?: 'candidate' | 'recruiter' | 'organizer' }) => Promise<{ user?: UserProfile; isNewUser?: boolean; email?: string }>;
   logout: () => void;
-  switchRole: (role: 'candidate' | 'organizer' | 'recruiter') => Promise<void>;
+  requestRoleChange: (toRole: string, reason: string) => Promise<any>;
   refreshUser: () => Promise<void>;
   clearRoleConflict: () => void;
 }
@@ -160,14 +160,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     toast.success('Signed out of workspace.');
   };
 
-  const switchRole = async (role: 'candidate' | 'organizer' | 'recruiter') => {
-    const demoAccounts = {
-      candidate: { email: 'alex@demo.local', pass: 'Demo1234!' },
-      recruiter: { email: 'recruiter@demo.local', pass: 'Demo1234!' },
-      organizer: { email: 'organizer@demo.local', pass: 'Demo1234!' },
-    };
-    const target = demoAccounts[role];
-    await login(target.email, target.pass);
+  const requestRoleChange = async (toRole: string, reason: string) => {
+    try {
+      const res = await authService.submitRoleRequest(toRole, reason);
+      const fbUser = firebaseService.getCurrentUser();
+      if (fbUser && user) {
+        await firebaseService.submitRoleRequest({
+          uid: fbUser.uid,
+          email: fbUser.email || user.email,
+          fromRole: user.role,
+          toRole,
+          reason,
+        });
+      }
+      toast.success('Role change application submitted for administrative review.');
+      return res;
+    } catch (err: any) {
+      const msg = err.response?.data?.error || err.message || 'Failed to submit role change request';
+      toast.error(msg);
+      throw err;
+    }
   };
 
   const refreshUser = async () => {
@@ -192,7 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         googleSignIn,
         directGoogleSignIn,
         logout,
-        switchRole,
+        requestRoleChange,
         refreshUser,
         clearRoleConflict,
       }}

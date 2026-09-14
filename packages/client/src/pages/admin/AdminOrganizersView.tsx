@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
+import { adminService } from '../../services/admin.service';
 import toast from 'react-hot-toast';
-import { Trophy, Mail, Calendar, Search, RefreshCw, CheckCircle } from 'lucide-react';
+import { 
+  Trophy, Mail, Search, RefreshCw, CheckCircle, 
+  Ban, LogOut, Calendar, ExternalLink
+} from 'lucide-react';
+import { ConfirmationModal } from '../../components/admin/ConfirmationModal';
 
 export const AdminOrganizersView: React.FC = () => {
   const [organizers, setOrganizers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [actionTarget, setActionTarget] = useState<{
+    type: 'SUSPEND' | 'FORCE_LOGOUT';
+    organizer: any;
+  } | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const loadOrganizers = async () => {
     setLoading(true);
@@ -25,6 +35,26 @@ export const AdminOrganizersView: React.FC = () => {
     loadOrganizers();
   }, []);
 
+  const handleActionConfirm = async (reason: string) => {
+    if (!actionTarget) return;
+    setActionLoading(true);
+    try {
+      if (actionTarget.type === 'SUSPEND') {
+        await adminService.updateUserStatus(actionTarget.organizer.id, 'suspended', reason);
+        toast.success(`Organizer ${actionTarget.organizer.email} suspended`);
+      } else if (actionTarget.type === 'FORCE_LOGOUT') {
+        await adminService.forceLogoutUser(actionTarget.organizer.id);
+        toast.success(`Sessions invalidated for ${actionTarget.organizer.email}`);
+      }
+      setActionTarget(null);
+      await loadOrganizers();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Action failed');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const filtered = organizers.filter(o =>
     o.name?.toLowerCase().includes(search.toLowerCase()) ||
     o.email?.toLowerCase().includes(search.toLowerCase()) ||
@@ -32,24 +62,31 @@ export const AdminOrganizersView: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-900/60 border border-gray-800 rounded-2xl p-5 shadow-xl">
+    <div className="space-y-6 font-mono">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#17171A] border border-[#2A2A2E] rounded-2xl p-5 shadow-xl">
         <div>
-          <div className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-amber-400" />
-            <h2 className="text-lg font-bold text-white">Hackathon Organizers & Hosts</h2>
-            <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold font-mono">
-              ORGN-2026 Registry
-            </span>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-[#26200E] text-[#D89A3E] border border-[#D89A3E]/30">
+              <Trophy className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-[#F5F5F4]">Hackathon Organizers & Hosts</h2>
+                <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#D89A3E]/20 text-[#D89A3E] border border-[#D89A3E]/30 font-semibold font-mono">
+                  ORGN-2026 Registry
+                </span>
+              </div>
+              <p className="text-xs text-[#6B6B70] mt-0.5">
+                Manage authorized campus, university, and community hackathon organizers and hosted competitions.
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-gray-400 mt-1">
-            Manage authorized campus, university, and community hackathon organizers.
-          </p>
         </div>
 
         <button
           onClick={loadOrganizers}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-white transition shrink-0"
+          disabled={loading}
+          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1E1E22] hover:bg-[#2A2A2E] border border-[#2A2A2E] text-xs font-semibold text-[#F5F5F4] transition shrink-0"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           Refresh
@@ -57,46 +94,50 @@ export const AdminOrganizersView: React.FC = () => {
       </div>
 
       <div className="relative">
-        <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+        <Search className="w-4 h-4 text-[#6B6B70] absolute left-3.5 top-1/2 -translate-y-1/2" />
         <input
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search organizers by name, ORGN-2026 ID, email..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-gray-900/60 border border-gray-800 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500"
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#17171A] border border-[#2A2A2E] text-xs text-[#F5F5F4] placeholder-[#6B6B70] focus:outline-none focus:border-[#D89A3E]"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map(o => (
-          <div key={o.id} className="bg-gray-900/60 border border-gray-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+          <div key={o.id} className="bg-[#17171A] border border-[#2A2A2E] rounded-2xl p-5 shadow-xl flex flex-col justify-between hover:border-[#38383D] transition">
             <div>
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="text-[11px] font-mono text-amber-400 font-bold">{o.publicId}</span>
-                  <h3 className="text-sm font-bold text-white mt-0.5">{o.name}</h3>
-                  <div className="text-[11px] text-gray-400 flex items-center gap-1 mt-0.5">
-                    <Mail className="w-3 h-3 text-gray-600" />
+                  <span className="text-[11px] font-mono text-[#D89A3E] font-bold">{o.publicId}</span>
+                  <h3 className="text-sm font-bold text-[#F5F5F4] mt-0.5">{o.name}</h3>
+                  <div className="text-[11px] text-[#6B6B70] flex items-center gap-1 mt-0.5">
+                    <Mail className="w-3 h-3 text-[#6B6B70]" />
                     {o.email}
                   </div>
                 </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  Verified
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#16261B] text-[#3FB65F] border border-[#3FB65F]/30">
+                  Verified Host
                 </span>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-gray-800">
-                <span className="text-[10px] text-gray-500 uppercase tracking-wider block font-semibold mb-1.5">
+              <div className="mt-4 pt-3 border-t border-[#2A2A2E]">
+                <span className="text-[10px] text-[#6B6B70] uppercase tracking-wider block font-semibold mb-1.5">
                   Hosted Hackathons ({o.hackathonsCount})
                 </span>
                 <div className="space-y-1">
                   {o.hackathons?.length === 0 ? (
-                    <span className="text-[11px] text-gray-600 italic">No events created yet</span>
+                    <span className="text-[11px] text-[#6B6B70] italic">No events created yet</span>
                   ) : (
                     o.hackathons?.map((h: any) => (
-                      <div key={h.id} className="text-[11px] text-gray-300 flex items-center justify-between p-1.5 rounded-lg bg-gray-950/60 border border-gray-800">
-                        <span className="truncate">{h.name}</span>
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${h.isPublished ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-400'}`}>
+                      <div key={h.id} className="text-[11px] text-[#A3A3A8] flex items-center justify-between p-2 rounded-lg bg-[#111113] border border-[#2A2A2E]">
+                        <span className="truncate max-w-[180px]">{h.name}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                          h.isPublished
+                            ? 'bg-[#16261B] text-[#3FB65F] border border-[#3FB65F]/30'
+                            : 'bg-[#1E1E22] text-[#6B6B70] border border-[#2A2A2E]'
+                        }`}>
                           {h.isPublished ? 'Published' : 'Draft'}
                         </span>
                       </div>
@@ -106,13 +147,54 @@ export const AdminOrganizersView: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-gray-800 text-[11px] text-gray-500 flex items-center justify-between">
-              <span>BitNBuild Partner</span>
-              <span className="text-emerald-400 font-medium">Privileged Host</span>
+            <div className="mt-4 pt-3 border-t border-[#2A2A2E] flex items-center justify-between">
+              <span className="text-[10px] text-[#6B6B70]">
+                Registered {new Date(o.createdAt).toLocaleDateString()}
+              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setActionTarget({ type: 'FORCE_LOGOUT', organizer: o })}
+                  title="Force logout active sessions"
+                  className="p-1.5 rounded-lg bg-[#1E1E22] hover:bg-[#2A2A2E] text-[#6B6B70] hover:text-[#F5F5F4] transition"
+                >
+                  <LogOut className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={() => setActionTarget({ type: 'SUSPEND', organizer: o })}
+                  title="Suspend organizer account"
+                  className="p-1.5 rounded-lg bg-[#2A1717] hover:bg-[#3D1E1E] text-[#E0554E] transition"
+                >
+                  <Ban className="w-3 h-3" />
+                </button>
+              </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Confirmation Modal */}
+      {actionTarget && (
+        <ConfirmationModal
+          isOpen={true}
+          onClose={() => setActionTarget(null)}
+          onConfirm={handleActionConfirm}
+          title={actionTarget.type === 'SUSPEND' ? 'Suspend Organizer Account' : 'Force Logout Organizer'}
+          description={
+            actionTarget.type === 'SUSPEND'
+              ? `Are you sure you want to suspend hosting privileges for ${actionTarget.organizer.name}? Any ongoing hackathons will have publishing disabled.`
+              : `Invalidate all active sessions for ${actionTarget.organizer.email}? The organizer will need to sign in again.`
+          }
+          affectedEntity={{
+            label: 'Organizer',
+            value: `${actionTarget.organizer.name} (${actionTarget.organizer.email})`,
+          }}
+          isDestructive={actionTarget.type === 'SUSPEND'}
+          isReversible={actionTarget.type !== 'SUSPEND'}
+          requireReason={actionTarget.type === 'SUSPEND'}
+          confirmText={actionTarget.type === 'SUSPEND' ? 'Suspend Organizer' : 'Force Logout'}
+          loading={actionLoading}
+        />
+      )}
     </div>
   );
 };

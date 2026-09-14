@@ -4,9 +4,10 @@ import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
 import { db } from '../db';
-import { users, profiles, passwordResets, emailVerifications, auditLogs } from '../db/schema';
-import { eq, and, gt } from 'drizzle-orm';
+import { users, profiles, passwordResets, emailVerifications, auditLogs, roleRequests } from '../db/schema';
+import { eq, and, gt, desc } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
+import { cache } from '../services/cache.service';
 
 export const authRouter = Router();
 
@@ -385,25 +386,31 @@ authRouter.post('/resend-verification', requireAuth, async (req, res) => {
 // ─── 6. GET CURRENT USER PROFILE (§4, §5) ────────────────────────────────────
 authRouter.get('/me', requireAuth, async (req, res) => {
   try {
-    const user = await db.query.users.findFirst({ where: eq(users.id, req.user!.id) });
-    if (!user) return res.status(404).json({ error: 'User profile not found' });
-    
-    const profile = await db.query.profiles.findFirst({ where: eq(profiles.userId, user.id) });
+    const userId = req.user!.id;
+    const userData = await cache.get(`user:me:${userId}`, async () => {
+      const [user, profile] = await Promise.all([
+        db.query.users.findFirst({ where: eq(users.id, userId) }),
+        db.query.profiles.findFirst({ where: eq(profiles.userId, userId) }),
+      ]);
+      if (!user) return null;
+      return {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        emailVerified: user.emailVerified,
+        profileCompleted: user.profileCompleted,
+        verificationStatus: user.verificationStatus,
+        status: user.status,
+        lastLoginAt: user.lastLoginAt,
+        firstName: profile?.firstName,
+        lastName: profile?.lastName,
+        photoUrl: profile?.photoUrl,
+        profile,
+      };
+    }, 15000);
 
-    res.json({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      emailVerified: user.emailVerified,
-      profileCompleted: user.profileCompleted,
-      verificationStatus: user.verificationStatus,
-      status: user.status,
-      lastLoginAt: user.lastLoginAt,
-      firstName: profile?.firstName,
-      lastName: profile?.lastName,
-      photoUrl: profile?.photoUrl,
-      profile,
-    });
+    if (!userData) return res.status(404).json({ error: 'User profile not found' });
+    res.json(userData);
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to fetch user context' });
   }
@@ -435,3 +442,85 @@ authRouter.post('/delete-account', requireAuth, async (req, res) => {
     res.status(500).json({ error: 'Failed to complete account deletion' });
   }
 });
+
+// ─── 8. SERVER-SIDE ROLE CHANGE REQUESTS ────────────────────────────────────
+
+authRouter.post('/role-request', requireAuth, async (req, res) => {
+  try {
+    const requestedRole = req.body.requestedRole || req.body.toRole;
+    const reason = req.body.reason;
+    const validRoles = ['candidate', 'recruiter', 'organizer'];
+
+    if (!requestedRole || !validRoles.includes(requestedRole)) {
+      return res.status(400).json({ error: `Requested role must be one of: ${validRoles.join(', ')}` });
+    }
+
+    if (!reason || reason.trim().length < 10) {
+      return res.status(400).json({ error: 'Please provide a clear justification (minimum 10 characters).' });
+    }
+
+    const userId = req.user!.id;
+    const userEmail = req.user!.email;
+    const currentRole = req.user!.role;
+
+    if (currentRole === requestedRole) {
+      return res.status(400).json({ error: `You are already registered as a ${currentRole}.` });
+    }
+
+    // Check for existing pending request
+    const existing = await db.query.roleRequests.findFirst({
+      where: and(
+        eq(roleRequests.userId, userId),
+        eq(roleRequests.status, 'pending')
+      ),
+    });
+
+    if (existing) {
+      return res.status(409).json({
+        error: `You already have a pending role change request to become a ${existing.requestedRole}. Please wait for administrator review.`,
+      });
+    }
+
+    const [created] = await db.insert(roleRequests).values({
+      userId,
+      userEmail,
+      currentRole,
+      requestedRole,
+      reason: reason.trim(),
+      status: 'pending',
+    }).returning();
+
+    await db.insert(auditLogs).values({
+      actorId: userId,
+      actorEmail: userEmail,
+      actorRole: currentRole,
+      action: 'ROLE_CHANGE_REQUESTED',
+      entityType: 'USER',
+      entityId: userId,
+      details: { fromRole: currentRole, toRole: requestedRole, reason: reason.trim() },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Role change request submitted for administrator review.',
+      request: created,
+    });
+  } catch (err: any) {
+    console.error('Role request error:', err);
+    res.status(500).json({ error: 'Failed to submit role change request' });
+  }
+});
+
+authRouter.get('/role-request/my', requireAuth, async (req, res) => {
+  try {
+    const requests = await db.select().from(roleRequests)
+      .where(eq(roleRequests.userId, req.user!.id))
+      .orderBy(desc(roleRequests.createdAt))
+      .limit(5);
+
+    res.json({ requests });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to fetch your role requests' });
+  }
+});
+
