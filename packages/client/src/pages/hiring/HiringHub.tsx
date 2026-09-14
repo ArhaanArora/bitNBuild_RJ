@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import { HiringRequirement } from '../../types/hiring';
 import {
   getLastHiringSearch,
@@ -19,6 +20,9 @@ export type HiringSubView =
   | 'SHORTLISTED';
 
 export default function HiringHub() {
+  const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [currentView, setCurrentView] = useState<HiringSubView>('DASHBOARD');
 
@@ -35,34 +39,44 @@ export default function HiringHub() {
     );
   });
 
-  // Sync with searchParams
+  // Sync with searchParams & route
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab === 'hire') {
-      setCurrentView('REQUIREMENTS');
-    } else if (tab === 'get-hired') {
+    if (location.pathname === '/verification') {
       setCurrentView('GET_HIRED');
-    } else if (tab === 'discovery') {
+    } else if (tab === 'hire' || tab === 'requirements') {
+      setCurrentView('REQUIREMENTS');
+    } else if (tab === 'get-hired' || tab === 'assessment' || tab === 'verification') {
+      setCurrentView('GET_HIRED');
+    } else if (tab === 'discovery' || tab === 'candidates') {
       setCurrentView('DISCOVERY');
-    } else if (tab === 'shortlist') {
+    } else if (tab === 'shortlist' || tab === 'shortlisted') {
       setCurrentView('SHORTLISTED');
-    } else {
+    } else if (tab === 'dashboard') {
       setCurrentView('DASHBOARD');
+    } else {
+      // Default: If user is candidate, default to GET_HIRED view (Skill Verification)
+      // Otherwise recruiters and organizers default to DASHBOARD overview
+      if (user?.role === 'candidate') {
+        setCurrentView('GET_HIRED');
+      } else {
+        setCurrentView('DASHBOARD');
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, location.pathname, user?.role]);
 
   const switchView = (view: HiringSubView) => {
     setCurrentView(view);
     if (view === 'DASHBOARD') {
-      setSearchParams({});
+      navigate('/hiring?tab=dashboard');
     } else if (view === 'REQUIREMENTS') {
-      setSearchParams({ tab: 'hire' });
+      navigate('/hiring?tab=hire');
     } else if (view === 'DISCOVERY') {
-      setSearchParams({ tab: 'discovery' });
+      navigate('/hiring?tab=discovery');
     } else if (view === 'GET_HIRED') {
-      setSearchParams({ tab: 'get-hired' });
+      navigate('/verification');
     } else if (view === 'SHORTLISTED') {
-      setSearchParams({ tab: 'shortlist' });
+      navigate('/hiring?tab=shortlist');
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

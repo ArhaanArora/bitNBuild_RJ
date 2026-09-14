@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import NotificationBell from './NotificationBell';
+import { ErrorBoundary } from './ErrorBoundary';
 import {
   Home,
   CheckSquare,
@@ -15,7 +16,10 @@ import {
   ChevronDown,
   LogOut,
   Sparkles,
+  Lock,
+  ShieldCheck,
 } from 'lucide-react';
+import RoleRequestModal from './RoleRequestModal';
 
 interface NavItem {
   to: string;
@@ -26,38 +30,38 @@ interface NavItem {
 
 const candidateNav: NavItem[] = [
   { to: '/dashboard', label: 'Home', icon: Home, section: 'HOME' },
-  { to: '/skills', label: 'My Skills', icon: CheckSquare, section: 'EVIDENCE' },
+  { to: '/verification', label: 'Skill Verification', icon: ShieldCheck, section: 'EVIDENCE' },
+  { to: '/skills', label: 'My Skills', icon: CheckSquare },
   { to: '/projects', label: 'My Projects', icon: FolderKanban },
-  { to: '/hiring?tab=assessment', label: 'Skill Verification', icon: CheckSquare },
-  { to: '/hackathons', label: 'Hackathons', icon: Rocket, section: 'OPPORTUNITIES' },
-  { to: '/hackathons/find-teammates', label: 'Find Teammates', icon: Users, section: 'DISCOVER' },
-  { to: '/hiring?tab=status', label: 'Applications', icon: Briefcase },
-  { to: '/profile', label: 'Profile', icon: User, section: 'ACCOUNT' },
+  { to: '/analysis/report', label: '3D Constellation', icon: Sparkles },
+  { to: '/hackathons', label: 'Hackathons', icon: Rocket, section: 'EVENTS' },
+  { to: '/hackathons/find-teammates', label: 'Find Teammates', icon: Users },
+  { to: '/hiring?tab=discovery', label: 'Opportunities', icon: Briefcase, section: 'CAREER' },
+  { to: '/profile', label: 'My Profile', icon: User, section: 'ACCOUNT' },
 ];
 
 const recruiterNav: NavItem[] = [
-  { to: '/hiring', label: 'Dashboard', icon: Home, section: 'HOME' },
-  { to: '/hiring?tab=discovery', label: 'Candidates', icon: UserCheck, section: 'TALENT' },
-  { to: '/recruiter/search', label: 'Search Talent', icon: Search },
-  { to: '/hiring?tab=shortlisted', label: 'Shortlists', icon: CheckSquare },
-  { to: '/hiring?tab=requirements', label: 'Job Posts', icon: Briefcase, section: 'OPPORTUNITIES' },
-  { to: '/profile', label: 'Organization Profile', icon: User, section: 'ACCOUNT' },
+  { to: '/hiring', label: 'Hiring Hub', icon: Briefcase, section: 'HIRING' },
+  { to: '/recruiter/search', label: 'Candidate Search', icon: Search },
+  { to: '/hackathons', label: 'Explore Hackathons', icon: Rocket, section: 'EVENTS' },
+  { to: '/profile', label: 'Recruiter Profile', icon: User, section: 'ACCOUNT' },
 ];
 
 const organizerNav: NavItem[] = [
-  { to: '/hackathons', label: 'Dashboard', icon: Home, section: 'HOME' },
-  { to: '/organizer/hackathons/new', label: 'Create Hackathon', icon: Rocket, section: 'EVENTS' },
+  { to: '/hackathons', label: 'Hackathons', icon: Rocket, section: 'EVENTS' },
+  { to: '/organizer/hackathons/new', label: 'Host Hackathon', icon: Rocket },
   { to: '/organizer/assessments', label: 'Assessment Builder', icon: CheckSquare },
   { to: '/hackathons/find-teammates', label: 'Team Formation', icon: Users, section: 'COMMUNITY' },
   { to: '/profile', label: 'Organizer Profile', icon: User, section: 'ACCOUNT' },
 ];
 
 export default function AppShell() {
-  const { user, switchRole, logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
 
   const navItems =
     user?.role === 'recruiter'
@@ -96,16 +100,29 @@ export default function AppShell() {
           <nav className="space-y-1">
             {navItems.map((item, idx) => {
               const Icon = item.icon;
+              const [itemPath, itemQuery] = item.to.split('?');
               const isActive =
                 item.to === '/dashboard'
                   ? location.pathname === '/dashboard' || location.pathname === '/'
-                  : location.pathname.startsWith(item.to);
+                  : item.to === '/verification'
+                  ? location.pathname === '/verification' ||
+                    (location.pathname === '/hiring' &&
+                      (location.search.includes('tab=assessment') ||
+                        location.search.includes('tab=get-hired') ||
+                        location.search.includes('tab=verification')))
+                  : itemQuery
+                  ? location.pathname === itemPath && location.search.includes(itemQuery)
+                  : location.pathname === itemPath ||
+                    (itemPath !== '/' && location.pathname.startsWith(itemPath));
 
               const showDivider =
                 item.section &&
                 idx > 0 &&
-                (item.section === 'OPPORTUNITIES' ||
+                (item.section === 'EVIDENCE' ||
+                  item.section === 'EVENTS' ||
+                  item.section === 'OPPORTUNITIES' ||
                   item.section === 'DISCOVER' ||
+                  item.section === 'CAREER' ||
                   item.section === 'ACCOUNT');
 
               return (
@@ -196,8 +213,9 @@ export default function AppShell() {
                   <div className="text-xs font-semibold text-[#F5F5F4] leading-tight">
                     {user?.firstName} {user?.lastName}
                   </div>
-                  <div className="text-[11px] text-[#A3A3A8] capitalize leading-tight">
-                    {user?.role || 'Candidate'}
+                  <div className="text-[11px] text-[#A3A3A8] capitalize leading-tight flex items-center gap-1">
+                    <span>{user?.role || 'Candidate'}</span>
+                    <Lock className="w-2.5 h-2.5 text-emerald-400" />
                   </div>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-[#6B6B70]" />
@@ -206,7 +224,7 @@ export default function AppShell() {
               {/* User Dropdown Menu */}
               {userDropdownOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-52 bg-[#17171A] border border-[#2A2A2E] rounded-xl shadow-2xl py-2 z-50 animate-fade-in"
+                  className="absolute right-0 mt-2 w-56 bg-[#17171A] border border-[#2A2A2E] rounded-xl shadow-2xl py-2 z-50 animate-fade-in"
                   onClick={() => setUserDropdownOpen(false)}
                 >
                   <div className="px-3 py-2 border-b border-[#2A2A2E]">
@@ -216,31 +234,40 @@ export default function AppShell() {
                     <p className="text-[11px] text-[#A3A3A8] truncate">{user?.email}</p>
                   </div>
 
-                  {/* Role Switcher */}
-                  <div className="px-3 py-2 border-b border-[#2A2A2E]">
-                    <span className="text-[10px] font-semibold text-[#6B6B70] uppercase tracking-wider block mb-1.5">
-                      Switch Role
-                    </span>
-                    <div className="grid grid-cols-3 gap-1 bg-[#1E1E22] p-1 rounded-lg">
-                      {(['candidate', 'recruiter', 'organizer'] as const).map((r) => (
-                        <button
-                          key={r}
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            switchRole(r);
-                            setUserDropdownOpen(false);
-                          }}
-                          className={`py-1 text-[10px] font-medium capitalize rounded transition ${
-                            user?.role === r
-                              ? 'bg-[#E8672E] text-[#0D0D0F] font-semibold'
-                              : 'text-[#A3A3A8] hover:text-white'
-                          }`}
-                        >
-                          {r}
-                        </button>
-                      ))}
+                  {/* Server-Enforced Role Status Indicator (§7) */}
+                  <div className="px-3 py-2.5 border-b border-[#2A2A2E] bg-[#121215]">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-semibold text-[#6B6B70] uppercase tracking-wider">
+                        Account Role
+                      </span>
+                      <span className="flex items-center gap-1 text-[10px] text-amber-400 font-medium">
+                        <Lock className="w-2.5 h-2.5" />
+                        <span>Server Enforced</span>
+                      </span>
                     </div>
+                    <div className="flex items-center justify-between bg-[#1E1E22] px-2.5 py-1.5 rounded-lg border border-[#2A2A2E] mb-2">
+                      <span className="text-xs font-semibold text-white capitalize">
+                        {user?.role || 'Candidate'}
+                      </span>
+                      <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
+                        <span>Verified</span>
+                        <Lock className="w-2.5 h-2.5" />
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#8E8E93] leading-tight mb-2.5">
+                      Current Role: <strong className="text-white capitalize">{user?.role || 'Candidate'} 🔒</strong> (verified by account permissions)
+                    </p>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setUserDropdownOpen(false);
+                        setRoleModalOpen(true);
+                      }}
+                      className="w-full py-1.5 px-2.5 text-[11px] font-medium text-[#E8672E] hover:text-white bg-[#E8672E]/10 hover:bg-[#E8672E] rounded-lg transition text-center flex items-center justify-center gap-1.5 border border-[#E8672E]/20"
+                    >
+                      <span>Request a different role</span>
+                    </button>
                   </div>
 
                   <div className="py-1">
@@ -272,10 +299,26 @@ export default function AppShell() {
         {/* Page Content Container */}
         <main className="flex-1 overflow-y-auto px-8 py-8">
           <div className="max-w-7xl mx-auto">
-            <Outlet />
+            <ErrorBoundary>
+              <Suspense
+                fallback={
+                  <div className="min-h-[300px] flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-full border-2 border-[#E8672E] border-t-transparent animate-spin" />
+                  </div>
+                }
+              >
+                <Outlet />
+              </Suspense>
+            </ErrorBoundary>
           </div>
         </main>
       </div>
+
+      {/* Role Change Application Modal (§7) */}
+      <RoleRequestModal
+        isOpen={roleModalOpen}
+        onClose={() => setRoleModalOpen(false)}
+      />
     </div>
   );
 }
