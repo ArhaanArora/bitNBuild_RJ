@@ -178,7 +178,7 @@ authRouter.post('/login', async (req, res) => {
 // ─── 3. GOOGLE OAUTH (§6) ────────────────────────────────────────────────────
 authRouter.post('/google', async (req, res) => {
   try {
-    const { email, name, role, photoUrl, idToken } = req.body;
+    const { email, name, role, photoUrl, idToken, password } = req.body;
     let authEmail = email;
     let authName = name;
     let authPhoto = photoUrl;
@@ -209,12 +209,20 @@ authRouter.post('/google', async (req, res) => {
         });
       }
 
-      await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, existing.id));
+      const updateData: any = { lastLoginAt: new Date() };
+      const hasNewPassword = typeof password === 'string' && password.trim().length >= 8;
+      if (hasNewPassword) {
+        updateData.passwordHash = await bcrypt.hash(password.trim(), 12);
+      }
+
+      await db.update(users).set(updateData).where(eq(users.id, existing.id));
       const profile = await db.query.profiles.findFirst({ where: eq(profiles.userId, existing.id) });
       const tokens = signTokens({ id: existing.id, email: existing.email, role: existing.role });
 
       return res.json({
-        message: `Welcome back, ${profile?.firstName || 'User'}. Your ${existing.role} workspace is ready.`,
+        message: hasNewPassword
+          ? `Welcome back, ${profile?.firstName || 'User'}. Password set successfully! Your ${existing.role} workspace is ready.`
+          : `Welcome back, ${profile?.firstName || 'User'}. Your ${existing.role} workspace is ready.`,
         user: {
           id: existing.id,
           email: existing.email,
@@ -244,7 +252,10 @@ authRouter.post('/google', async (req, res) => {
     const firstName = parts[0] || 'Google';
     const lastName = parts.slice(1).join(' ') || 'User';
 
-    const passwordHash = await bcrypt.hash(randomBytes(16).toString('hex'), 12);
+    const rawPassword = typeof password === 'string' && password.trim().length >= 8
+      ? password.trim()
+      : randomBytes(16).toString('hex');
+    const passwordHash = await bcrypt.hash(rawPassword, 12);
     const [newUser] = await db.insert(users).values({
       email: normalizedEmail,
       passwordHash,

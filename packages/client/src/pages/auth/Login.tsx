@@ -107,10 +107,11 @@ export default function Login() {
         name: account.name,
         photoUrl: account.photoUrl,
         role: account.role || 'candidate',
+        password: account.password,
       });
       setIsGoogleModalOpen(false);
       if (result.isNewUser) {
-        navigate('/signup', { state: { step: 2, email: result.email } });
+        navigate('/signup', { state: { step: 2, email: result.email, password: account.password } });
       } else if (result.user) {
         const redirectUrl =
           result.user.role === 'recruiter' ? '/hiring' :
@@ -301,7 +302,15 @@ export default function Login() {
                 </span>
                 <span className="text-[10px] text-[#6B6B70]">Demo1234!</span>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button
+                  type="button"
+                  onClick={() => fillDemo('alex.chen.dev@gmail.com')}
+                  className="p-2 rounded-lg bg-[#1E1E22] hover:bg-[#26262B] border border-[#2A2A2E] hover:border-[#4285F4]/50 text-left transition"
+                >
+                  <p className="text-[11px] font-semibold text-[#4285F4]">Google Demo ID</p>
+                  <p className="text-[10px] text-[#6B6B70] truncate">alex.chen.dev@gmail.com</p>
+                </button>
                 <button
                   type="button"
                   onClick={() => fillDemo('alex@demo.local')}

@@ -52,7 +52,7 @@ export const authService = {
     return data;
   },
 
-  async googleAuth(payload: { email: string; name?: string; role?: string; photoUrl?: string; idToken?: string }): Promise<any> {
+  async googleAuth(payload: { email: string; name?: string; role?: string; photoUrl?: string; idToken?: string; password?: string }): Promise<any> {
     const { data } = await api.post('/auth/google', payload);
     return data;
   },

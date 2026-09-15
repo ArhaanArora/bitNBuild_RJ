@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { firebaseService } from '../../services/firebase.service';
 import { GoogleAccountModal, GoogleAccountPayload } from '../../components/auth/GoogleAccountModal';
-import { User, Briefcase, Calendar, Check, ArrowRight, ArrowLeft, Shield, AlertCircle } from 'lucide-react';
+import { User, Briefcase, Calendar, Check, ArrowRight, ArrowLeft, Shield, AlertCircle, Key, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Signup() {
@@ -14,13 +14,15 @@ export default function Signup() {
   // Progressive profiling steps: 1 = Auth, 2 = Role, 3 = Profile
   const initialStep = (location.state as any)?.step || 1;
   const initialEmail = (location.state as any)?.email || '';
+  const initialPassword = (location.state as any)?.password || '';
 
   const [step, setStep] = useState<number>(initialStep);
-  const [authProvider, setAuthProvider] = useState<'email' | 'google'>('email');
+  const [authProvider, setAuthProvider] = useState<'email' | 'google'>((location.state as any)?.email ? 'google' : 'email');
 
   // Step 1: Credentials
   const [email, setEmail] = useState(initialEmail);
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState(initialPassword || 'Demo1234!');
+  const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
@@ -95,11 +97,15 @@ export default function Signup() {
     clearRoleConflict();
     try {
       const chosenRole = account.role || role;
+      if (account.password) {
+        setPassword(account.password);
+      }
       const res = await directGoogleSignIn({
         email: account.email,
         name: account.name,
         photoUrl: account.photoUrl,
         role: chosenRole,
+        password: account.password || (password && password.length >= 8 ? password : undefined),
       });
       setIsGoogleModalOpen(false);
       if (res.isNewUser) {
@@ -137,9 +143,10 @@ export default function Signup() {
         }
       }
 
+      const finalPassword = password && password.length >= 8 ? password : (authProvider === 'email' ? password : 'Demo1234!');
       const user = await register({
         email,
-        password: authProvider === 'email' ? password : undefined,
+        password: finalPassword,
         firstName,
         lastName,
         role,
@@ -550,6 +557,42 @@ export default function Signup() {
                       </div>
                     </>
                   )}
+
+                  {/* Account Password Setup (§3) */}
+                  <div className="p-3.5 bg-[#121214] border border-[#2A2A2E] rounded-xl mt-3">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-semibold text-[#F5F5F4] flex items-center gap-1.5">
+                        <Key className="w-3.5 h-3.5 text-[#E8672E]" />
+                        <span>Account Password {authProvider === 'google' ? '(for Email Login)' : ''}</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setPassword('Demo1234!')}
+                        className="text-[11px] text-[#E8672E] hover:text-[#F3773D] font-medium"
+                      >
+                        Autofill Demo (Demo1234!)
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Min 8 characters (e.g. Demo1234!)"
+                        className="w-full bg-[#1E1E22] border border-[#2A2A2E] focus:border-[#E8672E] rounded-lg px-3 py-2 pr-9 text-xs text-[#F5F5F4] focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2.5 top-2.5 text-[#6B6B70] hover:text-[#A3A3A8]"
+                      >
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-[#6B6B70] mt-1">
+                      Enables you to sign in with either Google or email & password anytime.
+                    </p>
+                  </div>
 
                   <div className="flex items-center gap-3 pt-3">
                     <button

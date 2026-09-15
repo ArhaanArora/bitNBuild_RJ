@@ -9,8 +9,8 @@ interface AuthCtx {
   roleConflict: { error: string; existingRole: string } | null;
   login: (email: string, password: string, rememberDevice?: boolean) => Promise<UserProfile>;
   register: (payload: RegisterPayload) => Promise<UserProfile>;
-  googleSignIn: (role?: 'candidate' | 'recruiter' | 'organizer') => Promise<{ user?: UserProfile; isNewUser?: boolean; email?: string }>;
-  directGoogleSignIn: (identity: { email: string; name?: string; photoUrl?: string; role?: 'candidate' | 'recruiter' | 'organizer' }) => Promise<{ user?: UserProfile; isNewUser?: boolean; email?: string }>;
+  googleSignIn: (role?: 'candidate' | 'recruiter' | 'organizer', password?: string) => Promise<{ user?: UserProfile; isNewUser?: boolean; email?: string }>;
+  directGoogleSignIn: (identity: { email: string; name?: string; photoUrl?: string; role?: 'candidate' | 'recruiter' | 'organizer'; password?: string }) => Promise<{ user?: UserProfile; isNewUser?: boolean; email?: string }>;
   logout: () => void;
   requestRoleChange: (toRole: string, reason: string) => Promise<any>;
   refreshUser: () => Promise<void>;
@@ -50,10 +50,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     restoreSession();
   }, [restoreSession]);
 
-  const login = async (email: string, password: string, rememberDevice = true): Promise<UserProfile> => {
+  const login = async (email: string, pass: string, rememberDevice = true) => {
     setRoleConflict(null);
     try {
-      const res = await authService.login(email, password);
+      const res = await authService.login(email.trim(), pass);
       const storage = rememberDevice ? localStorage : sessionStorage;
       storage.setItem('access_token', res.access);
       storage.setItem('refresh_token', res.refresh);
@@ -61,20 +61,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.success(res.message || `Welcome back, ${res.user.firstName || 'User'}.`);
       return res.user;
     } catch (err: any) {
-      const serverMsg = err.response?.data?.error || "We couldn't sign you in. Check your email and password and try again.";
-      toast.error(serverMsg);
+      const message = err.response?.data?.error || 'Authentication failed';
+      toast.error(message);
       throw err;
     }
   };
 
-  const register = async (payload: RegisterPayload): Promise<UserProfile> => {
+  const register = async (payload: RegisterPayload) => {
     setRoleConflict(null);
     try {
       const res = await authService.register(payload);
       localStorage.setItem('access_token', res.access);
       localStorage.setItem('refresh_token', res.refresh);
       setUser(res.user);
-      toast.success(res.message || `Account created successfully.`);
+      toast.success(res.message || 'Account created successfully.');
       return res.user;
     } catch (err: any) {
       if (err.response?.status === 409 && err.response?.data?.roleConflict) {
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const googleSignIn = async (role?: 'candidate' | 'recruiter' | 'organizer') => {
+  const googleSignIn = async (role?: 'candidate' | 'recruiter' | 'organizer', password?: string) => {
     setRoleConflict(null);
     try {
       const googleUser = await firebaseService.signInWithGoogle();
@@ -100,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         photoUrl: googleUser.photoURL,
         idToken: googleUser.idToken,
         role,
+        password,
       });
 
       if (res.isNewUser) {
@@ -123,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     name?: string;
     photoUrl?: string;
     role?: 'candidate' | 'recruiter' | 'organizer';
+    password?: string;
   }) => {
     setRoleConflict(null);
     try {
@@ -131,6 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name: identity.name,
         photoUrl: identity.photoUrl,
         role: identity.role,
+        password: identity.password,
       });
 
       if (res.isNewUser) {
